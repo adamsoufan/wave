@@ -1,0 +1,45 @@
+<Window 
+    x:Class="Wave.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:media="clr-namespace:System.Windows.Media.Animation;assembly=PresentationFramework"
+    Title="Hello WPF" Height="300" Width="400" WindowState="Maximized">
+  
+
+    <DockPanel>
+        <!-- Side Menu (Collapsible) -->
+        <StackPanel Name="SideMenu" DockPanel.Dock="Left" Width="50" Background="#2C3E50" MouseEnter="SideMenu_MouseEnter" MouseLeave="SideMenu_MouseLeave">
+            <Button Content="Home" Height="40" Margin="10"/>
+            <Button Content="Settings" Height="40" Margin="10"/>
+            <Button Content="About" Height="40" Margin="10"/>
+            
+        </StackPanel>
+
+        <!-- Main Content Area -->
+        <Grid Background="Gray">
+            <TextBlock Text="Main Content Goes Here" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="24"/>
+        </Grid>
+    </DockPanel>
+
+    <!--Collaping Animations -->
+    <Window.Resources>
+        <media:Storyboard x:Key="ExpandMenu">
+            <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
+                                   Storyboard.TargetProperty="Width" 
+                                   From="50" To="200" Duration="0:0:0.3"/>
+        </media:Storyboard>
+        
+        <media:Storyboard x:Key="CollapseMenu">
+            <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
+                                   Storyboard.TargetProperty="Width" 
+                                   From="200" To="50" Duration="0:0:0.3"/>
+        </media:Storyboard>
+    </Window.Resources>
+
+
+
+
+
+
+
+</Window>

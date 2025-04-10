@@ -1,0 +1,68 @@
+# User-specific files
+.idea/
+.vscode/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer files (for visual studio)
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]ist/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# User-specific config files
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]ist/
+[Dd]istToc/
+[Dd]ebugFinal/
+[Dd]ebugFinal_Public/
+[Dd]ebug_Test/
+
+# Windows Installer
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer files
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]ist/
+
+# Visual Studio for Mac config folder
+.vscode/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Uncomment if you have npm packages and use Node.js
+# node_modules/
+
+# Build directories
+bin/
+obj/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
