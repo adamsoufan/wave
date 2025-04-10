@@ -14,22 +14,17 @@ namespace Wave;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class GestureHub : Window
 {
-    public MainWindow()
+    public GestureHub()
     {
        InitializeComponent();
         
     }
 
-  
-
-    private void OpenGestureHubButton_Click(object sender, RoutedEventArgs e)
+    private void Button_Click(object sender, RoutedEventArgs e)
     {
-        
-        GestureHub gestureHub = new GestureHub();
-        gestureHub.Show();
-        this.Close(); // Hide the current window
+    MessageBox.Show("You clicked the button!");
     }
 
     // Expands the menu when mouse enters
