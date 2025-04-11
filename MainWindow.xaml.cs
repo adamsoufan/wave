@@ -12,9 +12,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Controls.Primitives; // For Storyboard
 namespace Wave;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     public MainWindow()
@@ -63,44 +60,45 @@ public partial class MainWindow : Window
     }
 
     // Expands the menu when mouse enters
-        private void SideMenu_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            // Start the expand animation
-            (this.Resources["ExpandMenu"] as Storyboard).Begin();
-        }
-
-        // Collapses the menu when mouse leaves
-        private void SideMenu_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            // Start the collapse animation
-            (this.Resources["CollapseMenu"] as Storyboard).Begin();
-        }
-
-
-        private void ToggleButton_Checked(object sender, RoutedEventArgs e)
+    private void SideMenu_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        ToggleButton button = sender as ToggleButton;
-        if (button != null)
-        {
-            string toggleButtonName = button.Name;
-
-            // Change images based on the toggle button's name
-            switch (toggleButtonName)
-            {
-                case "ToggleButton1":
-                    ChangeImage("ButtonImage1", "assets\\on_ph.png");
-                    break;
-                case "ToggleButton2":
-                    ChangeImage("ButtonImage2", "assets\\on_ph.png");
-                    break;
-                case "ToggleButton3":
-                    ChangeImage("ButtonImage3", "assets\\on_ph.png");
-                    break;
-                
-            }
-        }
+        // Start the expand animation
+        (this.Resources["ExpandMenu"] as Storyboard).Begin();
     }
 
+    // Collapses the menu when mouse leaves
+    private void SideMenu_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        // Start the collapse animation
+        (this.Resources["CollapseMenu"] as Storyboard).Begin();
+    }
+
+    // sets button twicth to off
+    private void ToggleButton_Checked(object sender, RoutedEventArgs e)
+{
+    ToggleButton button = sender as ToggleButton;
+    if (button != null)
+    {
+        string toggleButtonName = button.Name;
+
+        // Change images based on the toggle button's name
+        switch (toggleButtonName)
+        {
+            case "ToggleButton1":
+                ChangeImage("ButtonImage1", "assets\\on_ph.png");
+                break;
+            case "ToggleButton2":
+                ChangeImage("ButtonImage2", "assets\\on_ph.png");
+                break;
+            case "ToggleButton3":
+                ChangeImage("ButtonImage3", "assets\\on_ph.png");
+                break;
+            
+        }
+    }
+}
+
+    // sets button twicth to off
     private void ToggleButton_Unchecked(object sender, RoutedEventArgs e)
     {
         ToggleButton button = sender as ToggleButton;
@@ -125,7 +123,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // Helper function to change image source
+    //changes image source
     private void ChangeImage(string imageName, string imagePath)
     {
         Image img = this.FindName(imageName) as Image;

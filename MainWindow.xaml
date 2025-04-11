@@ -58,7 +58,7 @@
 
                 <!-- Create a tile for each grid cell in the 3x3-->
                 <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 1" HorizontalAlignment="Center" />
+                    <TextBlock Text="Wave to Close" HorizontalAlignment="Center" FontSize="24" />
                     <Ellipse Name="gestureImage1" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
                         <Ellipse.Fill>
                             <ImageBrush ImageSource="assets\profile_ph.png" />
@@ -72,7 +72,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 2" HorizontalAlignment="Center" />
+                    <TextBlock Text="Open Youtube" HorizontalAlignment="Center" FontSize="24"/>
                     <Ellipse Name="gestureImage2" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
                         <Ellipse.Fill>
                             <ImageBrush ImageSource="assets\profile_ph.png" />
@@ -86,7 +86,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 3" HorizontalAlignment="Center" />
+                    <TextBlock Text="Press Left" HorizontalAlignment="Center" FontSize="24" />
                     <Ellipse Name="gestureImage3" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
                         <Ellipse.Fill>
                             <ImageBrush ImageSource="assets\profile_ph.png" />

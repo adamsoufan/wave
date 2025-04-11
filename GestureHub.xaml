@@ -1,3 +1,4 @@
+
 <Window 
     x:Class="Wave.GestureHub"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,33 +8,154 @@
   
 
     <DockPanel>
-        <!-- Side Menu (Collapsible) -->
+        <!-- Side Menu (collapsible) -->
         <StackPanel Name="SideMenu" DockPanel.Dock="Left" Width="50" Background="#2C3E50" MouseEnter="SideMenu_MouseEnter" MouseLeave="SideMenu_MouseLeave">
-            <Button Content="Home" Height="40" Margin="10"/>
-            <Button Content="Settings" Height="40" Margin="10"/>
-            <Button Content="About" Height="40" Margin="10"/>
+
+            <Ellipse Name="ProfileImage" Width="50" Height="50" Stroke="Gray" StrokeThickness="2">
+                <Ellipse.Fill>
+                    <ImageBrush ImageSource="assets\profile_ph.png" />
+                </Ellipse.Fill>
+            </Ellipse>
+
+
+            <Button Content="Home" Height="40" Margin="10" Click="OpenHomeButton_Click"/>
+            
+            <Button Content="Macro Hub" Height="40" Margin="10" Click="OpenMacroHubButton_Click"/>
+            <Button Content="About" Height="40" Margin="10" Click="OpenAboutButton_Click"/>
+            <Button Content="Logout" Height="40" Margin="10" Click="LogoutButton_Click"/>
+            
             
         </StackPanel>
 
         <!-- Main Content Area -->
         <Grid Background="White">
-            <TextBlock Text="Main Content Goes Here" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="24"/>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- row 0 = title row-->
+                <RowDefinition Height="*"/>     <!-- row 1 = content area = everything else -->
+            </Grid.RowDefinitions>
+            
+            <!-- Title -->
+            <Grid Background="Gray"  Grid.Row="0">
+                <TextBlock Text="GESTURE HUB:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
+            </Grid>
+
+            <!-- Content Area -->
+            <Grid Grid.Row="1" >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>  <!-- c0 = avaiable gestures display -->
+                        <ColumnDefinition Width="*"/>     <!-- c1 = Gesture hub editor -->
+                    </Grid.ColumnDefinitions>
+
+                    <!--avaiable gestures display -->
+                    <StackPanel DockPanel.Dock="Left" Width="300" Background="Gray" HorizontalAlignment="Left">
+                        <TextBlock Text="Avaiable Gestures:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
+
+                    </StackPanel>
+
+                    <!--Gesture hub editor -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1">
+                        <StackPanel>
+
+                            <!-- Gesture [image, name, macro, save] grid-->
+                            <Grid> 
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>  <!-- c0 = gesture image selector -->
+                                    <ColumnDefinition Width="*"/>     <!-- c1 = name/macro text stack-->
+                                    <ColumnDefinition Width="*"/>     <!-- c2 = name/macro interactable stack -->
+                                    <ColumnDefinition Width="*"/>     <!-- c3 = save button stck -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- gesture image selector -->
+                                <Button Grid.Column= "0" Content="Select IMG" Height="100" Margin="100" /> 
+
+                                <!-- name/macro text stack-->
+                                <StackPanel Grid.Column="1" >
+                                    <TextBlock Text="Name:" HorizontalAlignment="Center" FontSize="24" Margin="15"/>
+                                    <TextBlock Text="Macro:" HorizontalAlignment="Center" FontSize="24" Margin="10"/>
+                                </StackPanel>
+
+                                <!-- name/macro interactable stack -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBox Name="GestureNameTextBox" Width="250" Height="30" Margin="25" />
+                                    <ComboBox Name="GestureTypeComboBox" Width="250" Height="30" Margin="15">
+                                        <ComboBoxItem Content="Swipe" />
+                                        <ComboBoxItem Content="Tap" />
+                                        <ComboBoxItem Content="Hold" />
+                                        <ComboBoxItem Content="Pinch" />
+                                    </ComboBox>
+
+                                </StackPanel>
+
+                                <!--save button stck -->
+                                <StackPanel Grid.Column="3">
+                                    <Button Content="Save" Width="100" Height="50" Margin="30" /> 
+                                </StackPanel>
+
+
+                            </Grid>
+
+                            <!--Gesture [selection] grid -->
+                            <Grid>
+                            </Grid>
+
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                </Grid>
+
+              
+            </Grid>
+
+
+            
+
         </Grid>
+
+
     </DockPanel>
+
+
+<!--///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+
 
     <!--Collapsing Animations -->
     <Window.Resources>
+
+        <!--Expand Animations -->
         <media:Storyboard x:Key="ExpandMenu">
             <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
                                    Storyboard.TargetProperty="Width" 
                                    From="50" To="200" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Width"
+                                   From="50" To="100" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Height"
+                                   From="50" To="100" Duration="0:0:0.3"/>
         </media:Storyboard>
         
+        <!--Collapse Animations -->
         <media:Storyboard x:Key="CollapseMenu">
             <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
                                    Storyboard.TargetProperty="Width" 
                                    From="200" To="50" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Width"
+                                   From="100" To="50" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Height"
+                                   From="100" To="50" Duration="0:0:0.3"/>
         </media:Storyboard>
+
+
+
+
+
+
     </Window.Resources>
 
 
