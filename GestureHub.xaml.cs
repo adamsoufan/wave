@@ -22,10 +22,7 @@ public partial class GestureHub : Window
         
     }
 
-    private void Button_Click(object sender, RoutedEventArgs e)
-    {
-    MessageBox.Show("You clicked the button!");
-    }
+    
 
     // Expands the menu when mouse enters
         private void SideMenu_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)

@@ -8,7 +8,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Windows.Media.Animation; // For Storyboard
+using System.Windows.Media.Animation;
+using System.Windows.Controls.Primitives; // For Storyboard
 namespace Wave;
 
 /// <summary>
@@ -22,7 +23,13 @@ public partial class MainWindow : Window
         
     }
 
-  
+   private void OpenProfileButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+        //MacroHub macroHub = new MacroHub();
+        //macroHub.Show();
+        //this.Close(); // Hide the current window
+    }
 
     private void OpenGestureHubButton_Click(object sender, RoutedEventArgs e)
     {
@@ -30,6 +37,29 @@ public partial class MainWindow : Window
         GestureHub gestureHub = new GestureHub();
         gestureHub.Show();
         this.Close(); // Hide the current window
+    }
+
+    private void OpenMacroHubButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+        //MacroHub macroHub = new MacroHub();
+        //macroHub.Show();
+        //this.Close(); // Hide the current window
+    }
+
+     private void OpenAboutButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+        //MacroHub macroHub = new MacroHub();
+        //macroHub.Show();
+        //this.Close(); // Hide the current window
+    }
+     private void LogoutButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+        //MacroHub macroHub = new MacroHub();
+        //macroHub.Show();
+        //this.Close(); // Hide the current window
     }
 
     // Expands the menu when mouse enters
@@ -45,5 +75,74 @@ public partial class MainWindow : Window
             // Start the collapse animation
             (this.Resources["CollapseMenu"] as Storyboard).Begin();
         }
+
+
+        private void ToggleButton_Checked(object sender, RoutedEventArgs e)
+    {
+        ToggleButton button = sender as ToggleButton;
+        if (button != null)
+        {
+            string toggleButtonName = button.Name;
+
+            // Change images based on the toggle button's name
+            switch (toggleButtonName)
+            {
+                case "ToggleButton1":
+                    ChangeImage("ButtonImage1", "assets\\on_ph.png");
+                    break;
+                case "ToggleButton2":
+                    ChangeImage("ButtonImage2", "assets\\on_ph.png");
+                    break;
+                case "ToggleButton3":
+                    ChangeImage("ButtonImage3", "assets\\on_ph.png");
+                    break;
+                
+            }
+        }
+    }
+
+    private void ToggleButton_Unchecked(object sender, RoutedEventArgs e)
+    {
+        ToggleButton button = sender as ToggleButton;
+        if (button != null)
+        {
+            string toggleButtonName = button.Name;
+
+            // Change images based on the toggle button's name
+            switch (toggleButtonName)
+            {
+                case "ToggleButton1":
+                    ChangeImage("ButtonImage1", "assets\\off_ph.png");
+                    break;
+                case "ToggleButton2":
+                    ChangeImage("ButtonImage2", "assets\\off_ph.png");
+                    break;
+                case "ToggleButton3":;
+                    ChangeImage("ButtonImage3", "assets\\off_ph.png");
+                    break;
+                // Add cases for other tiles...
+            }
+        }
+    }
+
+    // Helper function to change image source
+    private void ChangeImage(string imageName, string imagePath)
+    {
+        Image img = this.FindName(imageName) as Image;
+        if (img != null)
+        {
+            img.Source = new BitmapImage(new Uri(imagePath, UriKind.Relative));
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 }
 

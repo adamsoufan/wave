@@ -7,34 +7,180 @@
   
 
     <DockPanel>
-        <!-- Side Menu (Collapsible) -->
+        <!-- Side Menu (collapsible) -->
         <StackPanel Name="SideMenu" DockPanel.Dock="Left" Width="50" Background="#2C3E50" MouseEnter="SideMenu_MouseEnter" MouseLeave="SideMenu_MouseLeave">
-            <Button Content="Home" Height="40" Margin="10"/>
-            <Button Content="Settings" Height="40" Margin="10"/>
-            <Button Content="About" Height="40" Margin="10"/>
+
+            <Ellipse Name="ProfileImage" Width="50" Height="50" Stroke="Gray" StrokeThickness="2">
+                <Ellipse.Fill>
+                    <ImageBrush ImageSource="assets\profile_ph.png" />
+                </Ellipse.Fill>
+            </Ellipse>
+
+
+            <Button Content="Profile" Height="40" Margin="10" Click="OpenProfileButton_Click"/>
             <Button Content="Gesture Hub" Height="40" Margin="10" Click="OpenGestureHubButton_Click"/>
+            <Button Content="Macro Hub" Height="40" Margin="10" Click="OpenMacroHubButton_Click"/>
+            <Button Content="About" Height="40" Margin="10" Click="OpenAboutButton_Click"/>
+            <Button Content="Logout" Height="40" Margin="10" Click="LogoutButton_Click"/>
+            
             
         </StackPanel>
 
         <!-- Main Content Area -->
         <Grid Background="White">
-            <TextBlock Text="Main Content Goes Here" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="24"/>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>  <!-- row 0 = title row = defined by title inside -->
+                <RowDefinition Height="*"/>     <!-- row 1 = content area = everything else -->
+            </Grid.RowDefinitions>
+
+
+            <!-- Title -->
+            <Grid Background="Gray"  Grid.Row="0">
+                <TextBlock Text="GESTURES:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
+            </Grid>
+
+            <Grid Grid.Row="1">
+
+                <!-- Sets 3x3 grid-->
+                <!-- In the future: implement a smarter grid that resizes based on the amount of gestures-->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                     <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+
+                <!-- Create a tile for each grid cell in the 3x3-->
+                <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 1" HorizontalAlignment="Center" />
+                    <Ellipse Name="gestureImage1" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="assets\profile_ph.png" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <ToggleButton Name="ToggleButton1" Checked="ToggleButton_Checked" Unchecked="ToggleButton_Unchecked">
+                        <ToggleButton.Content>
+                            <Image Name="ButtonImage1" Stretch="Fill" Width="200" Height="80" Source="assets\off_ph.png"/>
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 2" HorizontalAlignment="Center" />
+                    <Ellipse Name="gestureImage2" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="assets\profile_ph.png" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <ToggleButton Name="ToggleButton2" Checked="ToggleButton_Checked" Unchecked="ToggleButton_Unchecked">
+                        <ToggleButton.Content>
+                            <Image Name="ButtonImage2" Stretch="Fill" Width="200" Height="80" Source="assets\off_ph.png"/>
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                </StackPanel>
+
+                <StackPanel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 3" HorizontalAlignment="Center" />
+                    <Ellipse Name="gestureImage3" Width="200" Height="200" Stroke="Gray" StrokeThickness="2">
+                        <Ellipse.Fill>
+                            <ImageBrush ImageSource="assets\profile_ph.png" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <ToggleButton Name="ToggleButton3" Checked="ToggleButton_Checked" Unchecked="ToggleButton_Unchecked">
+                        <ToggleButton.Content>
+                            <Image Name="ButtonImage3" Stretch="Fill" Width="200" Height="80" Source="assets\off_ph.png"/>
+                        </ToggleButton.Content>
+                    </ToggleButton>
+                </StackPanel>
+
+                <!-- <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 4" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 5" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 6" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
+                </StackPanel> -->
+<!-- 
+                <StackPanel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 7" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 8" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Tile 9" HorizontalAlignment="Center" />
+                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
+                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
+                </StackPanel> -->
+
+
+            </Grid>
+
         </Grid>
+
+
     </DockPanel>
+
+
+<!--///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+
 
     <!--Collapsing Animations -->
     <Window.Resources>
+
+        <!--Expand Animations -->
         <media:Storyboard x:Key="ExpandMenu">
             <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
                                    Storyboard.TargetProperty="Width" 
                                    From="50" To="200" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Width"
+                                   From="50" To="100" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Height"
+                                   From="50" To="100" Duration="0:0:0.3"/>
         </media:Storyboard>
         
+        <!--Collapse Animations -->
         <media:Storyboard x:Key="CollapseMenu">
             <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
                                    Storyboard.TargetProperty="Width" 
                                    From="200" To="50" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Width"
+                                   From="100" To="50" Duration="0:0:0.3"/>
+            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
+                                   Storyboard.TargetProperty="Height"
+                                   From="100" To="50" Duration="0:0:0.3"/>
         </media:Storyboard>
+
+
+
+
+
+
     </Window.Resources>
 
 
