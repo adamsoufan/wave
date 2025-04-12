@@ -74,55 +74,8 @@ public partial class GestureHub : Window
         (this.Resources["CollapseMenu"] as Storyboard).Begin();
     }
 
-    // sets button twicth to off
-    private void ToggleButton_Checked(object sender, RoutedEventArgs e)
-{
-    ToggleButton button = sender as ToggleButton;
-    if (button != null)
-    {
-        string toggleButtonName = button.Name;
+ 
 
-        // Change images based on the toggle button's name
-        switch (toggleButtonName)
-        {
-            case "ToggleButton1":
-                ChangeImage("ButtonImage1", "assets\\on_ph.png");
-                break;
-            case "ToggleButton2":
-                ChangeImage("ButtonImage2", "assets\\on_ph.png");
-                break;
-            case "ToggleButton3":
-                ChangeImage("ButtonImage3", "assets\\on_ph.png");
-                break;
-            
-        }
-    }
-}
-
-    // sets button twicth to off
-    private void ToggleButton_Unchecked(object sender, RoutedEventArgs e)
-    {
-        ToggleButton button = sender as ToggleButton;
-        if (button != null)
-        {
-            string toggleButtonName = button.Name;
-
-            // Change images based on the toggle button's name
-            switch (toggleButtonName)
-            {
-                case "ToggleButton1":
-                    ChangeImage("ButtonImage1", "assets\\off_ph.png");
-                    break;
-                case "ToggleButton2":
-                    ChangeImage("ButtonImage2", "assets\\off_ph.png");
-                    break;
-                case "ToggleButton3":;
-                    ChangeImage("ButtonImage3", "assets\\off_ph.png");
-                    break;
-                // Add cases for other tiles...
-            }
-        }
-    }
 
     //changes image source
     private void ChangeImage(string imageName, string imagePath)
@@ -133,6 +86,51 @@ public partial class GestureHub : Window
             img.Source = new BitmapImage(new Uri(imagePath, UriKind.Relative));
         }
     }
+
+
+
+    private void Image_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed && sender is Image image)
+        {
+            if (image.Source != null)
+            {
+                // Create a DataObject with the correct type
+                DataObject data = new DataObject(typeof(ImageSource), image.Source);
+
+                // Start drag-and-drop with copy effect
+                DragDrop.DoDragDrop(image, data, DragDropEffects.Copy);
+            }
+        }
+    }
+
+    private void Slot_Drop(object sender, DragEventArgs e)
+    {
+        
+        
+
+        if (e.Data.GetDataPresent(typeof(ImageSource)))
+        {
+            ImageSource droppedImage = e.Data.GetData(typeof(ImageSource)) as ImageSource;
+
+            if (sender is Border border)
+            {
+                // Try casting child to Image directly
+                if (border.Child is Image image)
+                {
+                    image.Source = droppedImage;
+                    
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
 
 
 

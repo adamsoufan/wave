@@ -97,9 +97,41 @@
 
                             </Grid>
 
-                            <!--Gesture [selection] grid -->
-                            <Grid>
-                            </Grid>
+                            <!-- Gesture [selection] stack -->
+                            <StackPanel Margin="10" >
+                                <TextBlock Text="GESTURE:" HorizontalAlignment="Left" FontSize="35" Margin="10"/>
+
+                                <!--Gesture [selection] grid -->
+                                <Grid AllowDrop="True">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="400"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Drop Slots -->
+                                    <StackPanel Grid.Column="0" AllowDrop="True" Orientation="Vertical">
+                                        <Border BorderBrush="Gray" BorderThickness="1" AllowDrop="True" Drop="Slot_Drop"  Background="LightGray" Margin="5">
+                                            <Image Name="SlotImage1" Source="assets\off_ph.png" Width="100" Height="100"/>
+                                        </Border>
+                                        <Border BorderBrush="Gray" BorderThickness="1" AllowDrop="True" Drop="Slot_Drop" Background="LightGray" Margin="5">
+                                            <Image Name="SlotImage2" Width="100" Height="100"/>
+                                        </Border>
+                                    </StackPanel>
+
+
+                                    <!-- Gestures Menu -->
+                                    <ScrollViewer Grid.Column="1" Background="Gray">
+                                        <StackPanel>
+                                            <Image Source="assets\profile_ph.png" Width="100" Height="100"   MouseMove="Image_MouseMove"/>
+                                            <Image Source="assets\profile_ph.png" Width="100" Height="100"  MouseMove="Image_MouseMove"/>
+                                            <Image Source="assets\profile_ph.png" Width="100" Height="100"  MouseMove="Image_MouseMove"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+
+
+                                </Grid>
+
+                            </StackPanel>
 
 
                         </StackPanel>
