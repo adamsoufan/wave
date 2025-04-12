@@ -39,9 +39,9 @@ public partial class MainWindow : Window
     private void OpenMacroHubButton_Click(object sender, RoutedEventArgs e)
     {
         
-        //MacroHub macroHub = new MacroHub();
-        //macroHub.Show();
-        //this.Close(); // Hide the current window
+        MacroHub macroHub = new MacroHub();
+        macroHub.Show();
+        this.Close(); // Hide the current window
     }
 
      private void OpenAboutButton_Click(object sender, RoutedEventArgs e)
@@ -73,7 +73,7 @@ public partial class MainWindow : Window
         (this.Resources["CollapseMenu"] as Storyboard).Begin();
     }
 
-    // sets button twicth to off
+    // sets button swicth to on
     private void ToggleButton_Checked(object sender, RoutedEventArgs e)
 {
     ToggleButton button = sender as ToggleButton;
@@ -98,7 +98,7 @@ public partial class MainWindow : Window
     }
 }
 
-    // sets button twicth to off
+    // sets button swicth to off
     private void ToggleButton_Unchecked(object sender, RoutedEventArgs e)
     {
         ToggleButton button = sender as ToggleButton;

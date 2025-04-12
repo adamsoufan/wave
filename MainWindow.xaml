@@ -8,9 +8,9 @@
 
     <DockPanel>
         <!-- Side Menu (collapsible) -->
-        <StackPanel Name="SideMenu" DockPanel.Dock="Left" Width="50" Background="#2C3E50" MouseEnter="SideMenu_MouseEnter" MouseLeave="SideMenu_MouseLeave">
+        <StackPanel Name="SideMenu" DockPanel.Dock="Left" Width="200" Background="#2C3E50" >
 
-            <Ellipse Name="ProfileImage" Width="50" Height="50" Stroke="Gray" StrokeThickness="2">
+            <Ellipse Name="ProfileImage" Width="100" Height="100" Stroke="Gray" StrokeThickness="2">
                 <Ellipse.Fill>
                     <ImageBrush ImageSource="assets\profile_ph.png" />
                 </Ellipse.Fill>
@@ -99,41 +99,6 @@
                     </ToggleButton>
                 </StackPanel>
 
-                <!-- <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 4" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 5" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 6" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
-                </StackPanel> -->
-<!-- 
-                <StackPanel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 7" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200" />
-                </StackPanel>
-
-                <StackPanel Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 8" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Tile 9" HorizontalAlignment="Center" />
-                    <Image Width="200" Height="200" Source="assets\profile_ph.png" HorizontalAlignment="Center" />
-                    <ToggleButton Content="Toggle" HorizontalAlignment="Center" Margin="10" Height="50" Width="200"/>
-                </StackPanel> -->
 
 
             </Grid>
@@ -147,41 +112,8 @@
 <!--///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
 
 
-    <!--Collapsing Animations -->
-    <Window.Resources>
-
-        <!--Expand Animations -->
-        <media:Storyboard x:Key="ExpandMenu">
-            <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
-                                   Storyboard.TargetProperty="Width" 
-                                   From="50" To="200" Duration="0:0:0.3"/>
-            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
-                                   Storyboard.TargetProperty="Width"
-                                   From="50" To="100" Duration="0:0:0.3"/>
-            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
-                                   Storyboard.TargetProperty="Height"
-                                   From="50" To="100" Duration="0:0:0.3"/>
-        </media:Storyboard>
-        
-        <!--Collapse Animations -->
-        <media:Storyboard x:Key="CollapseMenu">
-            <media:DoubleAnimation Storyboard.TargetName="SideMenu" 
-                                   Storyboard.TargetProperty="Width" 
-                                   From="200" To="50" Duration="0:0:0.3"/>
-            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
-                                   Storyboard.TargetProperty="Width"
-                                   From="100" To="50" Duration="0:0:0.3"/>
-            <media:DoubleAnimation Storyboard.TargetName="ProfileImage"
-                                   Storyboard.TargetProperty="Height"
-                                   From="100" To="50" Duration="0:0:0.3"/>
-        </media:Storyboard>
 
 
-
-
-
-
-    </Window.Resources>
 
 
 

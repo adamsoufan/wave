@@ -1,6 +1,6 @@
 
 <Window 
-    x:Class="Wave.GestureHub"
+    x:Class="Wave.MacroHub"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:media="clr-namespace:System.Windows.Media.Animation;assembly=PresentationFramework"
@@ -19,8 +19,7 @@
 
 
             <Button Content="Home" Height="40" Margin="10" Click="OpenHomeButton_Click"/>
-            
-            <Button Content="Macro Hub" Height="40" Margin="10" Click="OpenMacroHubButton_Click"/>
+            <Button Content="Gesture Hub" Height="40" Margin="10" Click="OpenGestureHubButton_Click"/>
             <Button Content="About" Height="40" Margin="10" Click="OpenAboutButton_Click"/>
             <Button Content="Logout" Height="40" Margin="10" Click="LogoutButton_Click"/>
             
@@ -37,7 +36,7 @@
             
             <!-- Title -->
             <Grid Background="Gray"  Grid.Row="0">
-                <TextBlock Text="GESTURE HUB:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
+                <TextBlock Text="MACRO HUB:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
             </Grid>
 
             <!-- Content Area -->
@@ -50,7 +49,7 @@
 
                     <!--avaiable gestures display -->
                     <StackPanel DockPanel.Dock="Left" Width="300" Background="Gray" HorizontalAlignment="Left">
-                        <TextBlock Text="Avaiable Gestures:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
+                        <TextBlock Text="Saved Macros:" HorizontalAlignment="Left" FontSize="24" Margin="10"/>
 
                     </StackPanel>
 
@@ -58,36 +57,19 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Column="1">
                         <StackPanel>
 
-                            <!-- Gesture [image, name, macro, save] grid-->
+                            <!-- Macro [name save] grid-->
                             <Grid> 
 
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>     <!-- c0 = gesture image selector -->
-                                    <ColumnDefinition Width="*"/>     <!-- c1 = name/macro text stack-->
-                                    <ColumnDefinition Width="*"/>     <!-- c2 = name/macro interactable stack -->
-                                    <ColumnDefinition Width="*"/>     <!-- c3 = save button stck -->
+                                    <ColumnDefinition Width="*"/>     <!-- c0 = name -->
+                                    <ColumnDefinition Width="*"/>     <!-- c1 = name text box-->
+                                    <ColumnDefinition Width="*"/>     <!-- c2 = save stack -->
                                 </Grid.ColumnDefinitions>
 
-                                <!-- gesture image selector -->
-                                <Button Grid.Column= "0" Content="Select IMG" Height="100" Margin="100" /> 
 
-                                <!-- name/macro text stack-->
-                                <StackPanel Grid.Column="1" >
-                                    <TextBlock Text="Name:" HorizontalAlignment="Center" FontSize="24" Margin="15"/>
-                                    <TextBlock Text="Macro:" HorizontalAlignment="Center" FontSize="24" Margin="10"/>
-                                </StackPanel>
+                                <TextBlock Grid.Column="0" Text="Name:" HorizontalAlignment="Left" FontSize="24" Margin="35"/>
 
-                                <!-- name/macro interactable stack -->
-                                <StackPanel Grid.Column="2">
-                                    <TextBox Name="GestureNameTextBox" Width="250" Height="30" Margin="25" />
-                                    <ComboBox Name="GestureTypeComboBox" Width="250" Height="30" Margin="15">
-                                        <ComboBoxItem Content="Swipe" />
-                                        <ComboBoxItem Content="Tap" />
-                                        <ComboBoxItem Content="Hold" />
-                                        <ComboBoxItem Content="Pinch" />
-                                    </ComboBox>
-
-                                </StackPanel>
+                                <TextBox Grid.Column="1" Name="MacroNameTextBox" Width="250" Height="30" Margin="25" />
 
                                 <!--save button stck -->
                                 <StackPanel Grid.Column="3">
@@ -98,8 +80,8 @@
                             </Grid>
 
                             <!-- Gesture [selection] stack -->
-                            <StackPanel Margin="10" >
-                                <TextBlock Text="GESTURE:" HorizontalAlignment="Left" FontSize="35" Margin="10"/>
+                            <StackPanel Margin="10" Background="Gray" >
+                                <TextBlock Text="ACTIONS:" HorizontalAlignment="Left" FontSize="35" Margin="10"/>
 
                                 <!--Gesture [selection] grid -->
                                 <Grid AllowDrop="True">

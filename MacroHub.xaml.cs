@@ -13,13 +13,13 @@ using System.Windows.Controls.Primitives;
 using System.Printing; // For Storyboard
 namespace Wave;
 
-public partial class GestureHub : Window
+public partial class MacroHub : Window
 {
 
    
 
 
-    public GestureHub()
+    public MacroHub()
     {
        InitializeComponent();
         
@@ -41,11 +41,11 @@ public partial class GestureHub : Window
         this.Close(); // Hide the current window
     }
 
-    private void OpenMacroHubButton_Click(object sender, RoutedEventArgs e)
+    private void OpenGestureHubButton_Click(object sender, RoutedEventArgs e)
     {
         
-        MacroHub macroHub = new MacroHub();
-        macroHub.Show();
+        GestureHub gestureHub = new GestureHub();
+        gestureHub.Show();
         this.Close(); // Hide the current window
     }
 
