@@ -24,7 +24,7 @@
 
 /* Macros Header with Search and New Button */
 .macros-header {
-    padding: 15px;
+    padding: 15px 15px 15px 20px; /* Increased left padding to align with content */
     border-bottom: 1px solid #e0e0e0;
     background-color: #fff;
     display: flex;
@@ -91,7 +91,7 @@
 
 .macro-item {
     height: 50px;
-    padding: 15px;
+    padding: 15px 15px 15px 20px; /* Increased left padding to align with header */
     border-bottom: 1px solid #e0e0e0;
     background-color: #ffffff;
     display: flex;
@@ -106,10 +106,15 @@
     font-weight: bold;
     color: #1a73e8;
     border-left: 4px solid #1a73e8;
+    padding-left: 16px; /* Adjust for the border */
 }
 
 .macro-item:hover:not(.selected) {
     background-color: #f5f5f5;
+}
+
+.macro-item:empty {
+    display: none; /* Hide empty macro items */
 }
 
 /* Macro Editor Panel (Right Side) */
@@ -127,6 +132,7 @@
     align-items: center;
     margin-bottom: 25px;
     gap: 15px;
+    position: relative; /* For absolute positioning of save button */
 }
 
 .macro-name-section label {
@@ -134,16 +140,18 @@
     margin-right: 10px;
     color: #333;
     font-weight: 500;
+    margin-left: 5px; /* Added to better align with Saved Macros text */
 }
 
 #macro-name {
-    flex: 0.7;
+    flex: 1;
     height: 40px;
     font-size: 1rem;
     padding: 0 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     transition: border-color 0.2s, box-shadow 0.2s;
+    margin-right: 170px; /* Make space for the Save button */
 }
 
 #macro-name:focus {
@@ -162,6 +170,10 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 40px; /* Match the height of the name input */
 }
 
 #save-button:hover {

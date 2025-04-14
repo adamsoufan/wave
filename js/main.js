@@ -197,7 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 content.className = 'action-content';
                 
                 const label = document.createElement('div');
-                label.textContent = '• Key Press';
+                label.textContent = 'Key Press';
+                label.style.fontWeight = 'bold';
                 content.appendChild(label);
                 
                 // Create keypress capture element
@@ -212,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const scriptId = `script-file-${scriptCounter++}`;
                 actionContainer.innerHTML = `
                     <div class="action-content">
-                        <div>• Insert Script</div>
+                        <div style="font-weight: bold;">Upload Script</div>
                         <div class="script-upload">
-                            <button class="script-upload-button">Upload Script File</button>
+                            <button class="script-upload-button">Upload File</button>
                             <input type="file" id="${scriptId}" style="display: none;" />
                         </div>
                     </div>
@@ -240,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'command':
                 actionContainer.innerHTML = `
                     <div class="action-content">
-                        <div>• Command Line</div>
+                        <div style="font-weight: bold;">Command Line</div>
                         <textarea class="command-input" placeholder="Enter command..."></textarea>
                     </div>
                 `;
