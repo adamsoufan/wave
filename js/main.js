@@ -55,7 +55,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const gestureSelectionPopup = document.querySelector('.gesture-selection-popup');
     const closePopupButton = document.querySelector('.close-popup');
     const gestureIcons = document.querySelectorAll('.gesture-icon-item');
+    const newMappingButton = document.querySelector('#new-mapping-button');
+    const gestureItems = document.querySelectorAll('.gesture-item');
     let currentGestureBlock = null;
+
+    // Handle saved mappings selection
+    if (gestureItems) {
+        gestureItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove selected class from all items
+                gestureItems.forEach(i => i.classList.remove('selected'));
+                
+                // Add selected class to clicked item
+                item.classList.add('selected');
+                
+                // Update the name field with the selected mapping name
+                const gestureName = document.querySelector('#gesture-name');
+                if (gestureName) {
+                    gestureName.value = item.textContent.trim();
+                }
+                
+                // For demo purposes, simulate loading the mapping data
+                // In a real app, you'd load actual data based on the selection
+                if (item.textContent.includes('Wave')) {
+                    // Simulate a wave gesture for the left hand
+                    const leftHand = document.querySelector('.left-hand');
+                    if (leftHand) {
+                        // Clear any existing gesture
+                        leftHand.classList.add('has-gesture');
+                        let selectedGesture = leftHand.querySelector('.selected-gesture');
+                        if (!selectedGesture) {
+                            selectedGesture = document.createElement('div');
+                            selectedGesture.classList.add('selected-gesture');
+                            leftHand.appendChild(selectedGesture);
+                        }
+                        selectedGesture.textContent = '👋';
+                        
+                        // Update the preview circle
+                        const previewCircle = document.querySelector('.gesture-preview-circle');
+                        if (previewCircle) {
+                            previewCircle.textContent = '👋';
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    // Handle New Mapping button click
+    if (newMappingButton) {
+        newMappingButton.addEventListener('click', () => {
+            // Clear the gesture name input
+            const gestureName = document.querySelector('#gesture-name');
+            if (gestureName) {
+                gestureName.value = '';
+            }
+            
+            // Reset macro selection
+            const macroSelect = document.querySelector('#macro-select');
+            if (macroSelect) {
+                macroSelect.selectedIndex = 0;
+            }
+            
+            // Reset gesture blocks
+            gestureBlocks.forEach(block => {
+                block.classList.remove('has-gesture');
+                const selectedGesture = block.querySelector('.selected-gesture');
+                if (selectedGesture) {
+                    selectedGesture.remove();
+                }
+            });
+            
+            // Reset the gesture preview circle to default thumbs up
+            const previewCircle = document.querySelector('.gesture-preview-circle');
+            if (previewCircle) {
+                previewCircle.textContent = '👍';
+            }
+            
+            // Clear selection from all items in the gesture list
+            document.querySelectorAll('.gesture-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+        });
+    }
 
     // Show popup when a gesture block is clicked
     if (gestureBlocks && gestureSelectionPopup) {
@@ -96,6 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedGesture.textContent = emoji;
                     currentGestureBlock.classList.add('has-gesture');
                     
+                    // Update the gesture preview circle with the selected gesture
+                    const previewCircle = document.querySelector('.gesture-preview-circle');
+                    if (previewCircle) {
+                        previewCircle.textContent = emoji;
+                    }
+                    
                     // Hide the popup
                     gestureSelectionPopup.classList.remove('active');
                 }
@@ -106,9 +194,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Macro Hub specific functionality
     const macroItems = document.querySelectorAll('.macro-item');
     const actionTypes = document.querySelectorAll('.action-type');
-    const addActionButton = document.querySelector('#add-action-button');
-    const actionList = document.querySelector('.actions-list');
-    const saveButton = document.querySelector('#save-macro');
+    const addActionButton = document.querySelector('.toggle-action-types');
+    const actionList = document.querySelector('.action-list');
+    const saveButton = document.querySelector('#save-button');
+    const macroName = document.querySelector('#macro-name');
 
     // Handle macro selection
     if (macroItems) {
@@ -119,6 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Add selected class to clicked item
                 item.classList.add('selected');
+                
+                // Set the macro name in the input field
+                if (macroName) {
+                    macroName.value = item.textContent.trim();
+                }
             });
         });
     }
@@ -138,42 +232,151 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Different input types based on action type
         switch(type) {
-            case 'key':
+            case 'keypress':
                 // Create keypress capture input
                 actionContainer.innerHTML = `
-                    <span class="action-label">Key Press</span>
-                    <div class="key-capture" tabindex="0">Click to capture key</div>
+                    <div class="action-content">
+                        <div style="font-weight: bold;">Key Press</div>
+                        <div class="keypress-capture" tabindex="0">Click to record keypress</div>
+                    </div>
                 `;
                 
                 // Add event listener to capture keypress
-                const keyCapture = actionContainer.querySelector('.key-capture');
-                if (keyCapture) {
-                    keyCapture.addEventListener('keydown', (e) => {
-                        e.preventDefault();
-                        keyCapture.textContent = e.key;
-                        keyCapture.blur();
-                    });
-                    
-                    keyCapture.addEventListener('click', () => {
-                        keyCapture.textContent = 'Press any key...';
-                        keyCapture.focus();
-                    });
-                }
+                setTimeout(() => {
+                    const keyCapture = actionContainer.querySelector('.keypress-capture');
+                    if (keyCapture) {
+                        // Track active keys
+                        const activeKeys = new Set();
+                        let isRecording = false;
+                        
+                        keyCapture.addEventListener('click', () => {
+                            if (!isRecording) {
+                                // Reset and start recording
+                                activeKeys.clear();
+                                isRecording = true;
+                                keyCapture.textContent = 'Press key combination...';
+                                keyCapture.classList.add('recording');
+                                keyCapture.focus();
+                            }
+                        });
+                        
+                        keyCapture.addEventListener('keydown', (e) => {
+                            e.preventDefault();
+                            
+                            if (!isRecording) return;
+                            
+                            // Format the key name
+                            let keyName = '';
+                            switch(e.key) {
+                                case 'Control':
+                                    keyName = 'CTRL';
+                                    break;
+                                case 'Alt':
+                                    keyName = 'ALT';
+                                    break;
+                                case 'Shift':
+                                    keyName = 'SHIFT';
+                                    break;
+                                case 'Meta':
+                                    keyName = 'META';
+                                    break;
+                                case 'Escape':
+                                    keyName = 'ESC';
+                                    break;
+                                case ' ':
+                                    keyName = 'SPACE';
+                                    break;
+                                case 'ArrowUp':
+                                    keyName = 'UP';
+                                    break;
+                                case 'ArrowDown':
+                                    keyName = 'DOWN';
+                                    break;
+                                case 'ArrowLeft':
+                                    keyName = 'LEFT';
+                                    break;
+                                case 'ArrowRight':
+                                    keyName = 'RIGHT';
+                                    break;
+                                default:
+                                    keyName = e.key.toUpperCase();
+                            }
+                            
+                            // Add to active keys if not already present
+                            if (!activeKeys.has(keyName)) {
+                                activeKeys.add(keyName);
+                                
+                                // Update the display
+                                const keyCombination = Array.from(activeKeys).join('+');
+                                keyCapture.textContent = keyCombination;
+                            }
+                        });
+                        
+                        keyCapture.addEventListener('keyup', (e) => {
+                            // Don't end recording on modifier key release
+                            if (e.key === 'Control' || e.key === 'Alt' || e.key === 'Shift' || e.key === 'Meta') {
+                                return;
+                            }
+                            
+                            // End recording on other key releases
+                            if (isRecording) {
+                                isRecording = false;
+                                keyCapture.classList.remove('recording');
+                            }
+                        });
+                        
+                        keyCapture.addEventListener('blur', () => {
+                            if (isRecording) {
+                                isRecording = false;
+                                keyCapture.classList.remove('recording');
+                                
+                                if (activeKeys.size === 0) {
+                                    keyCapture.textContent = 'Click to record keypress';
+                                }
+                            }
+                        });
+                    }
+                }, 0);
                 break;
                 
             case 'script':
                 // Create script upload input
                 actionContainer.innerHTML = `
-                    <span class="action-label">Script</span>
-                    <input type="file" class="script-upload" />
+                    <div class="action-content">
+                        <div style="font-weight: bold;">Script</div>
+                        <div class="script-upload">
+                            <button class="script-upload-button">Upload File</button>
+                            <input type="file" style="display: none;" />
+                        </div>
+                    </div>
                 `;
+                
+                // Add event listener for the file upload
+                setTimeout(() => {
+                    const uploadButton = actionContainer.querySelector('.script-upload-button');
+                    const fileInput = actionContainer.querySelector('input[type="file"]');
+                    
+                    if (uploadButton && fileInput) {
+                        uploadButton.addEventListener('click', () => {
+                            fileInput.click();
+                        });
+                        
+                        fileInput.addEventListener('change', (e) => {
+                            if (e.target.files.length > 0) {
+                                uploadButton.textContent = `Selected: ${e.target.files[0].name}`;
+                            }
+                        });
+                    }
+                }, 0);
                 break;
                 
-            case 'text':
-                // Create text input
+            case 'command':
+                // Create command line input
                 actionContainer.innerHTML = `
-                    <span class="action-label">Text</span>
-                    <input type="text" class="text-input" placeholder="Enter text..." />
+                    <div class="action-content">
+                        <div style="font-weight: bold;">Command Line</div>
+                        <textarea class="command-input" placeholder="Enter command..."></textarea>
+                    </div>
                 `;
                 break;
                 
@@ -203,23 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle adding new actions
-    if (addActionButton && actionList) {
-        addActionButton.addEventListener('click', () => {
-            // Toggle action types panel visibility
-            const actionTypesPanel = document.querySelector('.action-types');
-            if (actionTypesPanel) {
-                actionTypesPanel.classList.toggle('active');
-            }
-        });
-    }
-
-    // Handle save button
-    if (saveButton) {
+    // Handle save button for macros
+    if (saveButton && macroName) {
         saveButton.addEventListener('click', () => {
-            const macroName = document.getElementById('macro-name').value;
-            if (macroName) {
-                alert(`Macro "${macroName}" saved successfully!`);
+            if (macroName.value) {
+                alert(`Macro "${macroName.value}" saved successfully!`);
             } else {
                 alert('Please enter a name for your macro.');
             }
