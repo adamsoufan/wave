@@ -1,5 +1,3 @@
-// js/main.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     const sidebarToggle = document.querySelector('.sidebar-toggle');
@@ -57,7 +55,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const gestureIcons = document.querySelectorAll('.gesture-icon-item');
     const newMappingButton = document.querySelector('#new-mapping-button');
     const gestureItems = document.querySelectorAll('.gesture-item');
+    const mappingSearch = document.querySelector('#mapping-search');
     let currentGestureBlock = null;
+
+    // Handle mapping search functionality
+    if (mappingSearch) {
+        mappingSearch.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            
+            gestureItems.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                
+                if (itemText.includes(searchValue) || itemText.trim() === '') {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
 
     // Handle saved mappings selection
     if (gestureItems) {
@@ -198,6 +214,59 @@ document.addEventListener('DOMContentLoaded', () => {
     const actionList = document.querySelector('.action-list');
     const saveButton = document.querySelector('#save-button');
     const macroName = document.querySelector('#macro-name');
+    let draggedItem = null;
+
+    // Setup drag and drop for action list
+    if (actionList) {
+        // Add event delegation for drag events on the action list
+        actionList.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('action-item')) {
+                draggedItem = e.target;
+                e.target.classList.add('dragging');
+                setTimeout(() => {
+                    e.target.style.opacity = '0.4';
+                }, 0);
+            }
+        });
+
+        actionList.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('action-item')) {
+                e.target.classList.remove('dragging');
+                e.target.style.opacity = '1';
+                draggedItem = null;
+            }
+        });
+
+        actionList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!draggedItem) return;
+            
+            const list = actionList;
+            const items = Array.from(list.querySelectorAll('.action-item:not(.dragging)'));
+            
+            let closestItem = null;
+            let closestDistance = Number.NEGATIVE_INFINITY;
+            
+            const mouseY = e.clientY;
+            
+            items.forEach(item => {
+                const box = item.getBoundingClientRect();
+                const boxMiddleY = box.top + box.height / 2;
+                const distance = mouseY - boxMiddleY;
+                
+                if (distance < 0 && distance > closestDistance) {
+                    closestDistance = distance;
+                    closestItem = item;
+                }
+            });
+            
+            if (closestItem) {
+                list.insertBefore(draggedItem, closestItem);
+            } else if (items.length > 0) {
+                list.appendChild(draggedItem);
+            }
+        });
+    }
 
     // Handle macro selection
     if (macroItems) {
@@ -221,6 +290,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function createActionInput(type) {
         const actionContainer = document.createElement('div');
         actionContainer.classList.add('action-item');
+        actionContainer.draggable = true;
+        
+        // Add handle for dragging
+        const dragHandle = document.createElement('div');
+        dragHandle.classList.add('drag-handle');
+        dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
         
         // Create the delete button
         const deleteButton = document.createElement('button');
@@ -230,15 +305,17 @@ document.addEventListener('DOMContentLoaded', () => {
             actionContainer.remove();
         });
         
+        // Create a wrapper for the action content
+        const actionContent = document.createElement('div');
+        actionContent.classList.add('action-content');
+        
         // Different input types based on action type
         switch(type) {
             case 'keypress':
                 // Create keypress capture input
-                actionContainer.innerHTML = `
-                    <div class="action-content">
-                        <div style="font-weight: bold;">Key Press</div>
-                        <div class="keypress-capture" tabindex="0">Click to record keypress</div>
-                    </div>
+                actionContent.innerHTML = `
+                    <div style="font-weight: bold;">Key Press</div>
+                    <div class="keypress-capture" tabindex="0">Click to record keypress</div>
                 `;
                 
                 // Add event listener to capture keypress
@@ -341,13 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             case 'script':
                 // Create script upload input
-                actionContainer.innerHTML = `
-                    <div class="action-content">
-                        <div style="font-weight: bold;">Script</div>
-                        <div class="script-upload">
-                            <button class="script-upload-button">Upload File</button>
-                            <input type="file" style="display: none;" />
-                        </div>
+                actionContent.innerHTML = `
+                    <div style="font-weight: bold;">Script</div>
+                    <div class="script-upload">
+                        <button class="script-upload-button">Upload File</button>
+                        <input type="file" style="display: none;" />
                     </div>
                 `;
                 
@@ -372,11 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             case 'command':
                 // Create command line input
-                actionContainer.innerHTML = `
-                    <div class="action-content">
-                        <div style="font-weight: bold;">Command Line</div>
-                        <textarea class="command-input" placeholder="Enter command..."></textarea>
-                    </div>
+                actionContent.innerHTML = `
+                    <div style="font-weight: bold;">Command Line</div>
+                    <textarea class="command-input" placeholder="Enter command..."></textarea>
                 `;
                 break;
                 
@@ -384,7 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
         }
         
-        // Append the delete button
+        // Assemble the action item components
+        actionContainer.appendChild(dragHandle);
+        actionContainer.appendChild(actionContent);
         actionContainer.appendChild(deleteButton);
         return actionContainer;
     }

@@ -1,5 +1,3 @@
-/* css/mappinghub.css */
-
 /* Main container for the Mapping Hub layout */
 .gesture-hub-container {
     display: flex;
@@ -27,8 +25,14 @@
     border-bottom: 1px solid #e0e0e0;
     background-color: #fff;
     display: flex;
+    flex-direction: column;
+}
+
+.gestures-header-top {
+    display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 12px;
 }
 
 .gestures-header h2 {
@@ -39,15 +43,16 @@
 }
 
 #new-mapping-button {
+    padding: 8px 16px;
     background-color: #1a73e8;
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 8px 15px;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
-    min-width: 110px;
+    white-space: nowrap;
 }
 
 #new-mapping-button:hover {
@@ -418,4 +423,24 @@
     #new-mapping-button {
         align-self: flex-start;
     }
+}
+
+.search-container {
+    margin-bottom: 0;
+}
+
+#mapping-search {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#mapping-search:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    outline: none;
 } 
