@@ -1,0 +1,28 @@
+/* css/gesturehub.css */
+
+.gesture-process {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.gesture-process h2 {
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.gesture-process ol {
+    padding-left: 20px;
+}
+
+.gesture-process li {
+    margin-bottom: 20px;
+}
+
+.gesture-process li h3 {
+    margin: 10px 0;
+}

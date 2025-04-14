@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestures - Main Menu</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main-menu.css" />
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar expanded">
+            <div class="sidebar-header">
+                <div class="profile-icon">
+                    <img src="images/linux-penguin.svg" alt="Profile" />
+                </div>
+                <button class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#">Profile</a></li>
+                    <li><a href="gesturehub.html">Gesture Hub</a></li>
+                    <li><a href="macrohub.html">Macro Hub</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main content area -->
+        <div class="content">
+            <h1>Gestures:</h1>
+            <div class="gesture-grid">
+                <div class="gesture-card">
+                    <div class="gesture-name">Wave to Close</div>
+                    <div class="gesture-icon">
+                        <div class="circle-icon">👋</div>
+                    </div>
+                    <div class="toggle-container">
+                        <div class="toggle-switch on">
+                            <span class="toggle-label">ON</span>
+                            <span class="toggle-label">OFF</span>
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <div class="gesture-circle"></div>
+                </div>
+
+                <div class="gesture-card">
+                    <div class="gesture-name">Open Youtube</div>
+                    <div class="gesture-icon">
+                        <div class="circle-icon">👌</div>
+                    </div>
+                    <div class="toggle-container">
+                        <div class="toggle-switch on">
+                            <span class="toggle-label">ON</span>
+                            <span class="toggle-label">OFF</span>
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <div class="gesture-circle"></div>
+                </div>
+
+                <div class="gesture-card">
+                    <div class="gesture-name">Press Left</div>
+                    <div class="gesture-icon">
+                        <div class="circle-icon">👍</div>
+                    </div>
+                    <div class="toggle-container">
+                        <div class="toggle-switch off">
+                            <span class="toggle-label">ON</span>
+                            <span class="toggle-label">OFF</span>
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                    <div class="gesture-circle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual scrollbar -->
+        <div class="scrollbar"></div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>
