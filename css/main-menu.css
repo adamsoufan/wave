@@ -172,12 +172,12 @@
 
 .toggle-switch.on .toggle-slider {
     transform: translateX(0);
-    background-color: #4CAF50;
+    background-color: #f44336;
 }
 
 .toggle-switch.off .toggle-slider {
     transform: translateX(60px);
-    background-color: #f44336;
+    background-color: #4CAF50;
 }
 
 .toggle-slider {
