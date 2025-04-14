@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapping Hub - Map Gestures to Macros</title>
+    <!-- Include Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Include the common stylesheet and a page-specific stylesheet -->
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main-menu.css" />
+    <link rel="stylesheet" href="css/mappinghub.css" />
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar expanded">
+            <div class="sidebar-header">
+                <div class="profile-icon">
+                    <img src="images/linux-penguin.svg" alt="Profile" />
+                </div>
+                <button class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="mappinghub.html">Mapping Hub</a></li>
+                    <li><a href="macrohub.html">Macro Hub</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main content area -->
+        <div class="content">
+            <h1>Mapping Hub</h1>
+            <div class="gesture-hub-container">
+                <!-- Left panel - Saved Mappings -->
+                <div class="available-gestures-panel">
+                    <div class="gestures-header">
+                        <h2>Saved Mappings</h2>
+                        <button id="new-mapping-button">New Mapping</button>
+                    </div>
+                    <div class="gesture-list">
+                        <div class="gesture-item selected">Wave to Close</div>
+                        <div class="gesture-item">Open YouTube</div>
+                        <div class="gesture-item">Press Left</div>
+                        <div class="gesture-item"></div>
+                        <div class="gesture-item"></div>
+                        <div class="gesture-item"></div>
+                        <div class="gesture-item"></div>
+                        <div class="gesture-item"></div>
+                        <div class="gesture-item"></div>
+                    </div>
+                </div>
+
+                <!-- Right panel - Gesture Editor -->
+                <div class="gesture-editor-panel">
+                    <!-- Gesture Editor Top Section -->
+                    <div class="gesture-details-section">
+                        <div class="gesture-preview">
+                            <div class="gesture-preview-circle"></div>
+                        </div>
+                        
+                        <div class="gesture-config">
+                            <div class="config-row">
+                                <label for="gesture-name">Name</label>
+                                <input type="text" id="gesture-name" name="gesture-name">
+                                <button id="save-gesture-button">Save</button>
+                            </div>
+                            
+                            <div class="config-row">
+                                <label for="macro-select">Macro</label>
+                                <select id="macro-select">
+                                    <option value="">Select a macro...</option>
+                                    <option value="macro1">My_macro001</option>
+                                    <option value="macro2">My_macro002</option>
+                                    <option value="macro3">Ssh_log</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gestures Section -->
+                    <div class="gestures-section">
+                        <div class="gestures-header">
+                            <h3>Gestures</h3>
+                        </div>
+                        
+                        <div class="gestures-container">
+                            <div class="gesture-grid">
+                                <!-- Left and Right hand gesture blocks -->
+                                <div class="gesture-block left-hand">
+                                    <div class="gesture-plus-icon">+</div>
+                                    <div class="hand-label">Left Hand</div>
+                                </div>
+                                <div class="gesture-block right-hand">
+                                    <div class="gesture-plus-icon">+</div>
+                                    <div class="hand-label">Right Hand</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup for gesture selection - Hidden by default -->
+    <div class="gesture-selection-popup">
+        <div class="popup-header">
+            <h4>Choose a Gesture</h4>
+            <button class="close-popup">&times;</button>
+        </div>
+        <div class="gesture-icons-grid">
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">👋</span>
+            </div>
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">👍</span>
+            </div>
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">✌️</span>
+            </div>
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">👌</span>
+            </div>
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">✋</span>
+            </div>
+            <div class="gesture-icon-item">
+                <span class="gesture-emoji">👉</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html> 

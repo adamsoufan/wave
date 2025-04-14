@@ -50,12 +50,65 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Mapping Hub gesture functionality
+    const gestureBlocks = document.querySelectorAll('.gesture-block');
+    const gestureSelectionPopup = document.querySelector('.gesture-selection-popup');
+    const closePopupButton = document.querySelector('.close-popup');
+    const gestureIcons = document.querySelectorAll('.gesture-icon-item');
+    let currentGestureBlock = null;
+
+    // Show popup when a gesture block is clicked
+    if (gestureBlocks && gestureSelectionPopup) {
+        gestureBlocks.forEach(block => {
+            block.addEventListener('click', () => {
+                currentGestureBlock = block;
+                gestureSelectionPopup.classList.add('active');
+            });
+        });
+    }
+
+    // Close the popup when close button is clicked
+    if (closePopupButton && gestureSelectionPopup) {
+        closePopupButton.addEventListener('click', () => {
+            gestureSelectionPopup.classList.remove('active');
+        });
+    }
+
+    // Select a gesture from the popup
+    if (gestureIcons) {
+        gestureIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                if (currentGestureBlock) {
+                    // Get the selected emoji
+                    const emoji = icon.querySelector('.gesture-emoji').textContent;
+                    
+                    // Check if the block already has a selected-gesture element
+                    let selectedGesture = currentGestureBlock.querySelector('.selected-gesture');
+                    
+                    // If not, create one
+                    if (!selectedGesture) {
+                        selectedGesture = document.createElement('div');
+                        selectedGesture.classList.add('selected-gesture');
+                        currentGestureBlock.appendChild(selectedGesture);
+                    }
+                    
+                    // Set the emoji and add the has-gesture class
+                    selectedGesture.textContent = emoji;
+                    currentGestureBlock.classList.add('has-gesture');
+                    
+                    // Hide the popup
+                    gestureSelectionPopup.classList.remove('active');
+                }
+            });
+        });
+    }
+
     // Macro Hub specific functionality
     const macroItems = document.querySelectorAll('.macro-item');
     const actionTypes = document.querySelectorAll('.action-type');
-    const addActionButton = document.querySelector('.add-action-button');
-    const actionList = document.querySelector('.action-list');
-    const saveButton = document.getElementById('save-button');
+    const addActionButton = document.querySelector('#add-action-button');
+    const actionList = document.querySelector('.actions-list');
+    const saveButton = document.querySelector('#save-macro');
 
     // Handle macro selection
     if (macroItems) {
@@ -63,187 +116,64 @@ document.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', () => {
                 // Remove selected class from all items
                 macroItems.forEach(i => i.classList.remove('selected'));
+                
                 // Add selected class to clicked item
                 item.classList.add('selected');
-                
-                // You could load the macro details here
-                document.getElementById('macro-name').value = item.textContent.trim();
             });
         });
     }
 
-    // Create different action inputs based on type
-    let scriptCounter = 0;
-    
-    // Helper function to create keypress capture elements
-    function createKeypressCapture() {
-        const keypressCapture = document.createElement('div');
-        keypressCapture.className = 'keypress-capture';
-        keypressCapture.innerHTML = 'Click to record keypress';
-        keypressCapture.setAttribute('tabindex', '0'); // Make it focusable
-        
-        // Variable to store active modifiers
-        let activeKeys = new Set();
-        let isRecording = false;
-        
-        keypressCapture.addEventListener('click', function() {
-            if (!isRecording) {
-                isRecording = true;
-                keypressCapture.innerHTML = 'Press keys now...';
-                keypressCapture.classList.add('recording');
-                keypressCapture.focus();
-                
-                // Clear previous keys
-                activeKeys.clear();
-            }
-        });
-        
-        keypressCapture.addEventListener('keydown', function(e) {
-            if (!isRecording) return;
-            
-            e.preventDefault();
-            
-            // Handle special keys and modifiers
-            let keyName = '';
-            
-            switch(e.key) {
-                case 'Control':
-                    keyName = 'CTRL';
-                    break;
-                case 'Alt':
-                    keyName = 'ALT';
-                    break;
-                case 'Shift':
-                    keyName = 'SHIFT';
-                    break;
-                case 'Meta':
-                    keyName = 'META';
-                    break;
-                case 'Escape':
-                    keyName = 'ESC';
-                    break;
-                case ' ':
-                    keyName = 'SPACE';
-                    break;
-                case 'ArrowUp':
-                    keyName = 'UP';
-                    break;
-                case 'ArrowDown':
-                    keyName = 'DOWN';
-                    break;
-                case 'ArrowLeft':
-                    keyName = 'LEFT';
-                    break;
-                case 'ArrowRight':
-                    keyName = 'RIGHT';
-                    break;
-                default:
-                    keyName = e.key.toUpperCase();
-            }
-            
-            // Add to active keys if not already present
-            if (!activeKeys.has(keyName)) {
-                activeKeys.add(keyName);
-                
-                // Update display
-                updateKeypressDisplay();
-            }
-        });
-        
-        keypressCapture.addEventListener('keyup', function(e) {
-            if (!isRecording) return;
-            
-            // End recording after key is released
-            isRecording = false;
-            keypressCapture.classList.remove('recording');
-        });
-        
-        keypressCapture.addEventListener('blur', function() {
-            isRecording = false;
-            keypressCapture.classList.remove('recording');
-            
-            if (activeKeys.size === 0) {
-                keypressCapture.innerHTML = 'Click to record keypress';
-            }
-        });
-        
-        function updateKeypressDisplay() {
-            if (activeKeys.size > 0) {
-                keypressCapture.innerHTML = Array.from(activeKeys).join('+');
-            }
-        }
-        
-        return keypressCapture;
-    }
-    
+    // Create action input based on type
     function createActionInput(type) {
         const actionContainer = document.createElement('div');
-        actionContainer.className = 'action-item';
+        actionContainer.classList.add('action-item');
         
-        // Add delete button to the common container
+        // Create the delete button
         const deleteButton = document.createElement('button');
-        deleteButton.className = 'delete-action';
-        deleteButton.innerHTML = '&times;';
-        deleteButton.title = 'Remove this action';
-        
-        deleteButton.addEventListener('click', function() {
+        deleteButton.classList.add('delete-action');
+        deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+        deleteButton.addEventListener('click', () => {
             actionContainer.remove();
         });
         
-        // Create inner content based on type
+        // Different input types based on action type
         switch(type) {
-            case 'keypress': {
-                const content = document.createElement('div');
-                content.className = 'action-content';
-                
-                const label = document.createElement('div');
-                label.textContent = 'Key Press';
-                label.style.fontWeight = 'bold';
-                content.appendChild(label);
-                
-                // Create keypress capture element
-                const keypressCapture = createKeypressCapture();
-                content.appendChild(keypressCapture);
-                
-                actionContainer.appendChild(content);
-                break;
-            }
-                
-            case 'script':
-                const scriptId = `script-file-${scriptCounter++}`;
+            case 'key':
+                // Create keypress capture input
                 actionContainer.innerHTML = `
-                    <div class="action-content">
-                        <div style="font-weight: bold;">Upload Script</div>
-                        <div class="script-upload">
-                            <button class="script-upload-button">Upload File</button>
-                            <input type="file" id="${scriptId}" style="display: none;" />
-                        </div>
-                    </div>
+                    <span class="action-label">Key Press</span>
+                    <div class="key-capture" tabindex="0">Click to capture key</div>
                 `;
                 
-                // Add event listener to the button to trigger file input
-                setTimeout(() => {
-                    const uploadButton = actionContainer.querySelector('.script-upload-button');
-                    const fileInput = actionContainer.querySelector(`#${scriptId}`);
-                    
-                    uploadButton.addEventListener('click', () => {
-                        fileInput.click();
+                // Add event listener to capture keypress
+                const keyCapture = actionContainer.querySelector('.key-capture');
+                if (keyCapture) {
+                    keyCapture.addEventListener('keydown', (e) => {
+                        e.preventDefault();
+                        keyCapture.textContent = e.key;
+                        keyCapture.blur();
                     });
                     
-                    fileInput.addEventListener('change', (e) => {
-                        if (e.target.files.length > 0) {
-                            uploadButton.textContent = `Selected: ${e.target.files[0].name}`;
-                        }
+                    keyCapture.addEventListener('click', () => {
+                        keyCapture.textContent = 'Press any key...';
+                        keyCapture.focus();
                     });
-                }, 0);
+                }
                 break;
                 
-            case 'command':
+            case 'script':
+                // Create script upload input
                 actionContainer.innerHTML = `
-                    <div class="action-content">
-                        <div style="font-weight: bold;">Command Line</div>
-                        <textarea class="command-input" placeholder="Enter command..."></textarea>
-                    </div>
+                    <span class="action-label">Script</span>
+                    <input type="file" class="script-upload" />
+                `;
+                break;
+                
+            case 'text':
+                // Create text input
+                actionContainer.innerHTML = `
+                    <span class="action-label">Text</span>
+                    <input type="text" class="text-input" placeholder="Enter text..." />
                 `;
                 break;
                 
