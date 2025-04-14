@@ -4,50 +4,84 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Macro Hub - Create Macros</title>
+    <title>Macro Hub</title>
     <!-- Include the common stylesheet and a page-specific stylesheet -->
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main-menu.css" />
     <link rel="stylesheet" href="css/macrohub.css" />
 </head>
 
 <body>
-    <header>
-        <div id="hamburger" class="hamburger">&#9776;</div>
-        <h1>Macro Hub</h1>
-    </header>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar expanded">
+            <div class="sidebar-header">
+                <div class="profile-icon">
+                    <img src="images/linux-penguin.svg" alt="Profile" />
+                </div>
+                <button class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#">Profile</a></li>
+                    <li><a href="gesturehub.html">Gesture Hub</a></li>
+                    <li><a href="macrohub.html">Macro Hub</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
 
-    <!-- Sidebar/Hamburger Menu -->
-    <nav id="sidebar" class="sidebar">
-        <ul>
-            <li><a href="index.html">Main Menu</a></li>
-            <li><a href="macrohub.html">Macro Hub</a></li>
-            <li><a href="gesturehub.html">Gesture Hub</a></li>
-        </ul>
-    </nav>
+        <!-- Main content area -->
+        <div class="content">
+            <h1>Macro Hub</h1>
+            <div class="macro-hub-container">
+                <!-- Left panel - Saved Macros List -->
+                <div class="saved-macros-panel">
+                    <h2>Saved Macros:</h2>
+                    <div class="macro-list">
+                        <div class="macro-item selected">My_macro001</div>
+                        <div class="macro-item">My_macro002</div>
+                        <div class="macro-item">Ssh_log</div>
+                        <div class="macro-item"></div>
+                        <div class="macro-item"></div>
+                        <div class="macro-item"></div>
+                        <div class="macro-item"></div>
+                    </div>
+                </div>
 
-    <main>
-        <section class="macro-process">
-            <h2>Create a Keypress Macro</h2>
-            <ol>
-                <li>
-                    <h3>Step 1: Define the Macro</h3>
-                    <p>Specify a name and description for your macro (e.g., "Save and Close").</p>
-                </li>
-                <li>
-                    <h3>Step 2: Record Key Sequence</h3>
-                    <p>Record the keypress sequence: <strong>CTRL+S</strong> followed by <strong>ALT+F4</strong>.</p>
-                </li>
-                <li>
-                    <h3>Step 3: Review &amp; Edit</h3>
-                    <p>Review the key sequence for accuracy and adjust if needed.</p>
-                </li>
-                <li>
-                    <h3>Step 4: Save Macro</h3>
-                    <p>Click "Save" to store your macro in the Macro Hub.</p>
-                </li>
-            </ol>
-        </section>
-    </main>
+                <!-- Right panel - Macro Editor -->
+                <div class="macro-editor-panel">
+                    <div class="macro-name-section">
+                        <label for="macro-name">Name</label>
+                        <input type="text" id="macro-name" name="macro-name">
+                        <button id="save-button">Save</button>
+                    </div>
+
+                    <div class="actions-section">
+                        <div class="actions-header">
+                            <h3>Actions:</h3>
+                            <button class="add-action-button">+</button>
+                        </div>
+                        <div class="actions-container">
+                            <div class="action-list">
+                                <!-- Left empty for action items to be added -->
+                            </div>
+                            <div class="action-types">
+                                <div class="action-type" data-type="keypress">• Key Press</div>
+                                <div class="action-type" data-type="script">• Insert Script</div>
+                                <div class="action-type" data-type="command">• Command Line</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/main.js"></script>
 </body>
