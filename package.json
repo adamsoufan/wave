@@ -1,0 +1,68 @@
+{
+  "name": "wave-gestures",
+  "version": "1.0.0",
+  "description": "Desktop application for mapping hand gestures to system actions",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamsoufan/wave.git"
+  },
+  "keywords": [
+    "gesture",
+    "recognition",
+    "electron",
+    "desktop",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adamsoufan/wave/issues"
+  },
+  "homepage": "https://github.com/adamsoufan/wave#readme",
+  "devDependencies": {
+    "electron": "^35.2.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.wave.gestures",
+    "productName": "Wave Gestures",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!dist/**/*",
+      "!build/**/*",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}

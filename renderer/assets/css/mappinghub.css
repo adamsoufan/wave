@@ -1,0 +1,302 @@
+/* Mapping Hub specific styles */
+
+/* Main container for the gesture hub */
+.gesture-hub-container {
+    display: flex;
+    height: calc(100vh - 150px);
+    width: 100%;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Left panel - Available gestures */
+.available-gestures-panel {
+    width: 300px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.gestures-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.gestures-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.gestures-header h2 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.gestures-header h3 {
+    font-size: 16px;
+    margin: 0;
+}
+
+#new-mapping-button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#new-mapping-button:hover {
+    background-color: #1557b0;
+}
+
+.search-container {
+    position: relative;
+}
+
+#mapping-search {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.gesture-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.gesture-item {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gesture-item:hover {
+    background-color: #f5f5f5;
+}
+
+.gesture-item.selected {
+    background-color: #e8f0fe;
+    font-weight: 500;
+}
+
+/* Right panel - Gesture editor */
+.gesture-editor-panel {
+    flex-grow: 1;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Gesture details section */
+.gesture-details-section {
+    display: flex;
+    gap: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.gesture-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.gesture-preview-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 60px;
+}
+
+.gesture-config {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-grow: 1;
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.config-row label {
+    min-width: 80px;
+    font-weight: 500;
+}
+
+.config-row input, .config-row select {
+    flex-grow: 1;
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+#save-gesture-button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+#save-gesture-button:hover {
+    background-color: #1557b0;
+}
+
+/* Gestures section */
+.gestures-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.gestures-container {
+    flex-grow: 1;
+    padding: 20px 0;
+}
+
+.gesture-grid {
+    display: flex;
+    gap: 40px;
+    height: 100%;
+}
+
+.gesture-block {
+    flex-basis: 50%;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 40px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gesture-block:hover {
+    background-color: #edf2fd;
+}
+
+.hand-label {
+    position: absolute;
+    top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.gesture-plus-icon {
+    font-size: 40px;
+    color: #999;
+    transition: all 0.2s;
+}
+
+.gesture-plus-icon.selected-gesture {
+    font-size: 60px;
+    color: #333;
+}
+
+/* Popup for gesture selection */
+.gesture-selection-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.popup-header h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-popup {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.gesture-icons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+.gesture-icon-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gesture-icon-item:hover {
+    background-color: #edf2fd;
+}
+
+.gesture-emoji {
+    font-size: 40px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .gesture-hub-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .available-gestures-panel {
+        width: 100%;
+        height: 300px;
+    }
+    
+    .gesture-editor-panel {
+        height: calc(100vh - 500px);
+    }
+} 

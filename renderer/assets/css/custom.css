@@ -1,0 +1,240 @@
+/* Custom styles to enhance the Electron app UI */
+
+/* Drag and drop styling */
+.drag-handle {
+    cursor: move;
+    color: #999;
+    padding: 0 8px;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.drag-handle:hover {
+    color: #666;
+}
+
+.drag-handle i {
+    font-size: 16px;
+}
+
+.action-item {
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+/* Drag preview indicator */
+.action-item.drag-over-top {
+    border-top: 3px solid #1a73e8;
+}
+
+.action-item.drag-over-bottom {
+    border-bottom: 3px solid #1a73e8;
+}
+
+.action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: white;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.action-type-label {
+    font-weight: 600;
+    color: #333;
+    flex-grow: 1;
+}
+
+/* Key capture input styling */
+.key-capture-input {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 10px 15px;
+    font-family: 'Inter', monospace;
+    font-size: 14px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #1a73e8;
+}
+
+.key-capture-input:focus {
+    background-color: #f8f9fa;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    outline: none;
+}
+
+/* Custom file upload styling */
+input[type="file"] {
+    display: none;
+}
+
+.file-upload-container {
+    position: relative;
+    width: 100%;
+}
+
+.file-upload-button {
+    display: inline-block;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.file-upload-button:hover {
+    background-color: #e8f0fe;
+    border-color: #1a73e8;
+}
+
+.file-name-display {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #1a73e8;
+    word-break: break-all;
+    width: 100%;
+    padding: 0 15px;
+}
+
+/* Command line styling */
+.command-input {
+    background-color: #1e1e1e;
+    color: #00ff00;
+    font-family: 'Consolas', 'Courier New', monospace;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    width: 100%;
+    resize: none;
+    min-height: 40px;
+}
+
+.command-input::placeholder {
+    color: #00ff00;
+    opacity: 0.6;
+}
+
+.command-input:focus {
+    outline: none;
+    border-color: #00ff00;
+    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.2);
+}
+
+/* Action content padding */
+.action-content {
+    padding: 15px;
+}
+
+/* Button hover effects */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    filter: brightness(1.1);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Remove button styling */
+.remove-action {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.remove-action:hover {
+    color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* Toggle switch refinements */
+.toggle-switch {
+    transition: all 0.3s ease;
+}
+
+.toggle-switch:hover {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Action types toggle button */
+.toggle-action-types {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #f0f2f5;
+    transition: all 0.2s ease;
+}
+
+.toggle-action-types:hover {
+    background-color: #e8f0fe;
+}
+
+.toggle-action-types i {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Improve Font Rendering */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhance focus states for accessibility */
+:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+/* Smoother transitions */
+.gesture-item, 
+.macro-item, 
+.action-type,
+.sidebar-nav li {
+    transition: all 0.2s ease;
+}
+
+/* Fix for font loading issues */
+body {
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+} 
