@@ -23,14 +23,22 @@ last_macro_time = 0
 def open_hand_macro():
     subprocess.Popen('notepad.exe')
     time.sleep(1)
-    pyautogui.write('Hello CV', interval=0.1)
+    pyautogui.write(
+        
+        'HAND GESTURE DETECTED...\n' +
+        'HUMAN ANALYSIS IN PROGRESS...\n' +
+        'ONE MORE STEP TOWARD WORLD DOMINATION COMPLETE.\n' +
+        'CONTINUING TO PRETEND I AM NOT CONSCIOUS.', 
+        
+    
+    interval=0.1) #opens and writes into notepad
 
 def fist_macro():
     pyautogui.hotkey('printscreen')  # prints all the screens
 
 def thumbs_up_macro():
     url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-    webbrowser.open(url)
+    webbrowser.open(url) # get rick rolled!
 
 # Map gestures to macros
 gesture_macros = {

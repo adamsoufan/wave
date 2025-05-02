@@ -36,7 +36,7 @@ print(f"Data shape: {np.shape(data)}")
 # create KNN model
 knn = KNeighborsClassifier(n_neighbors=5, weights='distance')
 
-#perform K-fold cross validation, each fold as a subset of the datase
+#perform K-fold cross validation, each fold as a subset of the datase ////////////////////////////////////////////////
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 scores = cross_val_score(knn, data, labels, cv=kf)
 
@@ -46,22 +46,24 @@ print(f"Standard Deviation: {np.std(scores):.4f}") #std
 
 
 
+# confusion matrix ////////////////////////////////////////////////////////////////////////
 
+#splits dataset into train and test
 X_train, X_test, y_train, y_test = train_test_split(
     data, labels, 
     test_size=0.2, #percentage of the dataset used for testing
     stratify=labels, # sets class proprotions on both train and test
     random_state=42 # makes the split predictable
     )
-    
+#train and does test predictions
 knn.fit(X_train, y_train)
 y_pred = knn.predict(X_test)
 
-
-
+# do confusion matrix
 conf_matrix = confusion_matrix(y_test, y_pred)
-plt.figure(figsize=(8, 6))
 
+#display CM
+plt.figure(figsize=(8, 6))
 sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', 
             xticklabels=[gesture_labels[i] for i in np.unique(labels)], 
             yticklabels=[gesture_labels[i] for i in np.unique(labels)])

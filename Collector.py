@@ -5,7 +5,7 @@ import os
 import time
 import numpy as np
 
-# Initialize MediaPipe
+# Initialize MediaPipe //////////////////////////////////////////
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     max_num_hands=1, 
@@ -15,12 +15,14 @@ hands = mp_hands.Hands(
 )
 mp_draw = mp.solutions.drawing_utils
 
-# Gesture labels
+# gesture labels /////////////////////////////////////////////////
 gesture_labels = {
     0: 'open_hand',
     1: 'fist',
     2: 'thumbs_up'
 }
+
+# Setup ///////////////////////////////////////////////////////////////////////////
 
 # Data storage
 all_landmarks = []
@@ -33,6 +35,8 @@ cap = cv2.VideoCapture(0)
 
 print("[INFO] Press 'n' to switch gesture label, 's' to save, 'ESC' to exit.")
 
+# collector loop ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 while cap.isOpened():
     success, img = cap.read()
     if not success:
@@ -44,6 +48,8 @@ while cap.isOpened():
 
     if results.multi_hand_landmarks and results.multi_hand_world_landmarks:
         for hand_landmarks, world_landmarks in zip(results.multi_hand_landmarks, results.multi_hand_world_landmarks):
+
+
             # Extract world landmark coordinates
             landmark_array = np.array([[lm.x, lm.y, lm.z] for lm in world_landmarks.landmark])
 
@@ -54,26 +60,32 @@ while cap.isOpened():
             if max_dist > 0:
                 landmark_array /= max_dist
 
-            # Flatten and store
+            # flatten and store
             all_landmarks.append(landmark_array.flatten().tolist())
             all_labels.append(current_label)
             sample_counter[gesture_labels[current_label]] += 1
 
-            # Draw on screen
+            # display on screen
             mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-    # UI info
+
+    # UI  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     current_text = f"Collecting: {gesture_labels[current_label]} | Samples: {sample_counter[gesture_labels[current_label]]}"
     cv2.putText(img, current_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
     cv2.imshow("Hand Gesture Collector", img)
 
+    # key binding /////////////////////////////////////////////////////
     key = cv2.waitKey(1)
-    if key == 27:
+
+    if key == 27: 
         break
-    elif key == ord('n'):
+    elif key == ord('n'): #next gesture
+
         current_label = (current_label + 1) % len(gesture_labels)
         print(f"[INFO] Now collecting for: {gesture_labels[current_label]}")
-    elif key == ord('s'):
+
+    elif key == ord('s'): # save data collected for current gesture
+
         timestamp = int(time.time())
         filename = f"hand_gesture_data_{timestamp}.pkl"
         with open(filename, 'wb') as f:
