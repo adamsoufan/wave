@@ -237,4 +237,171 @@ body {
     to {
         opacity: 1;
     }
+}
+
+/* No mappings / macros message styling */
+.no-mappings, .no-macros {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+
+/* Home page specific no-mappings styling */
+.no-mappings-home {
+    padding: 30px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    width: 100%;
+    margin: 40px 0;
+}
+
+.create-mapping-button {
+    display: inline-block;
+    background-color: #5755d9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 16px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.create-mapping-button:hover {
+    background-color: #4744c9;
+}
+
+/* Gesture selection popup enhancements */
+.gesture-selection-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+}
+
+.gesture-icons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+.gesture-icon-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f5f7fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+}
+
+.gesture-icon-item:hover {
+    background-color: #e8f0fe;
+    transform: scale(1.05);
+}
+
+.gesture-emoji {
+    font-size: 40px;
+}
+
+.close-popup {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-popup:hover {
+    color: #333;
+}
+
+/* Gesture blocks enhancements */
+.gesture-block {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px dashed #ddd;
+}
+
+.gesture-block:hover {
+    border-color: #aaa;
+    background-color: #f0f4fa;
+}
+
+.gesture-plus-icon {
+    font-size: 32px;
+    color: #aaa;
+    transition: all 0.2s ease;
+}
+
+.gesture-plus-icon.selected-gesture {
+    font-size: 48px;
+    color: #333;
+}
+
+/* No mappings list styling */
+.no-mappings-list {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    display: block;
+}
+
+/* Mapping Hub specific styles to override generic styles */
+.gestures-section .gesture-grid {
+    display: flex !important;
+    gap: 40px;
+    height: 100%; 
+    min-height: 200px;
+}
+
+.gestures-section .gesture-grid .no-mappings-home,
+.gestures-section .gesture-grid .no-mappings,
+.gestures-section .gesture-grid .no-mappings-list {
+    display: none !important;
+}
+
+.gestures-section .gesture-block {
+    flex-basis: 50%;
+    min-height: 150px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 40px;
+    cursor: pointer;
+    border: 2px dashed #ddd;
+}
+
+/* Make sure the popup works correctly */
+.gesture-selection-popup {
+    z-index: 9999 !important;
 } 

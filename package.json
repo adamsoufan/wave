@@ -64,5 +64,8 @@
         "AppImage"
       ]
     }
+  },
+  "dependencies": {
+    "electron-store": "^10.0.1"
   }
 }

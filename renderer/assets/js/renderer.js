@@ -1,5 +1,11 @@
 // Main renderer process JavaScript file for Electron application
 
+// Global variables to store data
+let macros = [];
+let mappings = [];
+let currentMacroId = null;
+let currentMappingId = null;
+
 // DOM Ready event handler
 document.addEventListener('DOMContentLoaded', function() {
     // Setup sidebar toggle functionality
@@ -32,33 +38,267 @@ function setupPageSpecificFunctionality() {
 
     if (pageName === 'index.html' || pageName === '') {
         // Main menu / gestures page functionality
+        loadMappings();
         setupGesturesPage();
     } else if (pageName === 'mappinghub.html') {
         // Mapping Hub page functionality
+        loadMacros();
+        loadMappings();
         setupMappingHub();
     } else if (pageName === 'macrohub.html') {
         // Macro Hub page functionality
+        loadMacros();
         setupMacroHub();
     }
 }
 
 // Setup IPC communication with main process
 function setupIpcCommunication() {
-    // Example of sending a message to the main process
-    const sendMessageToMain = () => {
-        window.api.send('message-from-renderer', 'Hello from the renderer process!');
-    };
-
-    // Example of receiving a message from the main process
-    window.api.receive('message-from-main', (message) => {
-        console.log('Received message from main process:', message);
+    // Listen for macros loaded
+    window.api.receive('macros-loaded', (loadedMacros) => {
+        macros = loadedMacros;
+        updateMacrosList();
+        updateMacroDropdown();
     });
 
-    // You can call sendMessageToMain() whenever you need to communicate with the main process
+    // Listen for mappings loaded
+    window.api.receive('mappings-loaded', (loadedMappings) => {
+        mappings = loadedMappings;
+        updateMappingsList();
+        updateGestureGrid();
+    });
+
+    // Listen for macro saved
+    window.api.receive('macro-saved', (savedMacro) => {
+        const existingIndex = macros.findIndex(m => m.id === savedMacro.id);
+        if (existingIndex >= 0) {
+            macros[existingIndex] = savedMacro;
+        } else {
+            macros.push(savedMacro);
+        }
+        updateMacrosList();
+        updateMacroDropdown();
+    });
+
+    // Listen for mapping saved
+    window.api.receive('mapping-saved', (savedMapping) => {
+        const existingIndex = mappings.findIndex(m => m.id === savedMapping.id);
+        if (existingIndex >= 0) {
+            mappings[existingIndex] = savedMapping;
+        } else {
+            mappings.push(savedMapping);
+        }
+        updateMappingsList();
+        updateGestureGrid();
+    });
+
+    // Listen for macro deleted
+    window.api.receive('macro-deleted', (deletedMacroId) => {
+        macros = macros.filter(m => m.id !== deletedMacroId);
+        updateMacrosList();
+        updateMacroDropdown();
+    });
+
+    // Listen for mapping deleted
+    window.api.receive('mapping-deleted', (deletedMappingId) => {
+        mappings = mappings.filter(m => m.id !== deletedMappingId);
+        updateMappingsList();
+        updateGestureGrid();
+    });
+}
+
+// Load macros from main process
+function loadMacros() {
+    window.api.send('load-macros');
+}
+
+// Load mappings from main process
+function loadMappings() {
+    window.api.send('load-mappings');
+}
+
+// Update the macros list in the UI
+function updateMacrosList() {
+    const macroList = document.querySelector('.macro-list');
+    if (!macroList) return;
+
+    // Clear existing items
+    macroList.innerHTML = '';
+
+    // Create no-macros element with specific class
+    const noMacrosDiv = document.createElement('div');
+    noMacrosDiv.classList.add('no-macros-list');  // Changed from 'no-macros' to 'no-macros-list'
+    noMacrosDiv.innerHTML = '<p>No macros found. Create a new macro to get started!</p>';
+    noMacrosDiv.style.padding = '20px';
+    noMacrosDiv.style.textAlign = 'center';
+    noMacrosDiv.style.color = '#666';
+    noMacrosDiv.style.display = macros.length === 0 ? 'block' : 'none';
+    
+    macroList.appendChild(noMacrosDiv);
+
+    if (macros.length === 0) {
+        return;
+    }
+
+    // Add macros to the list
+    macros.forEach(macro => {
+        const macroItem = document.createElement('div');
+        macroItem.classList.add('macro-item');
+        macroItem.textContent = macro.name;
+        macroItem.dataset.id = macro.id;
+
+        // Add click event to select the macro
+        macroItem.addEventListener('click', () => {
+            // Remove selected class from all items
+            document.querySelectorAll('.macro-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Add selected class to clicked item
+            macroItem.classList.add('selected');
+
+            // Load macro details
+            loadMacroDetails(macro);
+        });
+
+        macroList.appendChild(macroItem);
+    });
+}
+
+// Update the mappings list in the UI
+function updateMappingsList() {
+    const gestureList = document.querySelector('.gesture-list');
+    if (!gestureList) return;
+
+    // Clear existing items
+    gestureList.innerHTML = '';
+
+    // Check for no-mappings element specifically in the gesture-list
+    const noMappingsDiv = document.createElement('div');
+    noMappingsDiv.classList.add('no-mappings-list');  // Changed from 'no-mappings' to 'no-mappings-list'
+    noMappingsDiv.innerHTML = '<p>No mappings found. Create a new mapping to get started!</p>';
+    noMappingsDiv.style.padding = '20px';
+    noMappingsDiv.style.textAlign = 'center';
+    noMappingsDiv.style.color = '#666';
+    noMappingsDiv.style.display = mappings.length === 0 ? 'block' : 'none';
+    
+    gestureList.appendChild(noMappingsDiv);
+
+    if (mappings.length === 0) {
+        return;
+    }
+
+    // Add mappings to the list
+    mappings.forEach(mapping => {
+        const gestureItem = document.createElement('div');
+        gestureItem.classList.add('gesture-item');
+        gestureItem.textContent = mapping.name;
+        gestureItem.dataset.id = mapping.id;
+
+        // Add click event to select the mapping
+        gestureItem.addEventListener('click', () => {
+            // Remove selected class from all items
+            document.querySelectorAll('.gesture-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Add selected class to clicked item
+            gestureItem.classList.add('selected');
+
+            // Load mapping details
+            loadMappingDetails(mapping);
+        });
+
+        gestureList.appendChild(gestureItem);
+    });
+}
+
+// Update the macro dropdown in the mapping hub
+function updateMacroDropdown() {
+    const macroSelect = document.getElementById('macro-select');
+    if (!macroSelect) return;
+
+    // Save current selection
+    const currentSelection = macroSelect.value;
+
+    // Clear existing options
+    macroSelect.innerHTML = '<option value="">Select a macro...</option>';
+
+    // Add macros to the dropdown
+    macros.forEach(macro => {
+        const option = document.createElement('option');
+        option.value = macro.id;
+        option.textContent = macro.name;
+        macroSelect.appendChild(option);
+    });
+
+    // Restore previous selection if possible
+    if (currentSelection) {
+        macroSelect.value = currentSelection;
+    }
+}
+
+// Update the gesture grid on the home page
+function updateGestureGrid() {
+    const gestureGrid = document.querySelector('.gesture-grid');
+    if (!gestureGrid) return;
+
+    // Clear existing cards
+    gestureGrid.innerHTML = '';
+
+    // Show message if no mappings - with a more specific class name
+    const noMappingsDiv = document.createElement('div');
+    noMappingsDiv.classList.add('no-mappings-home');  // Changed from 'no-mappings' to 'no-mappings-home'
+    noMappingsDiv.innerHTML = `
+        <p>No gesture mappings found. Create some in the Mapping Hub!</p>
+        <a href="mappinghub.html" class="create-mapping-button">Create Mapping</a>
+    `;
+    noMappingsDiv.style.display = mappings.length === 0 ? 'flex' : 'none';
+    gestureGrid.appendChild(noMappingsDiv);
+
+    if (mappings.length === 0) {
+        return;
+    }
+
+    console.log('Updating gesture grid with mappings:', mappings);
+
+    // Add mapping cards to the grid
+    mappings.forEach(mapping => {
+        const gestureCard = document.createElement('div');
+        gestureCard.classList.add('gesture-card');
+        
+        // Determine which emoji to display (prefer left hand, then right hand, then default)
+        const displayEmoji = mapping.emoji || 
+                         (mapping.leftHand || mapping.rightHand || '👋');
+        
+        gestureCard.innerHTML = `
+            <div class="gesture-name">${mapping.name}</div>
+            <div class="gesture-icon">
+                <div class="circle-icon">${displayEmoji}</div>
+            </div>
+            <div class="toggle-container">
+                <div class="toggle-switch ${mapping.enabled ? 'on' : 'off'}" data-id="${mapping.id}">
+                    <span class="toggle-label">ON</span>
+                    <span class="toggle-label">OFF</span>
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        `;
+
+        gestureGrid.appendChild(gestureCard);
+    });
+
+    // Add event listeners to toggle switches
+    setupToggleSwitches();
 }
 
 // Main menu / gestures page functionality
 function setupGesturesPage() {
+    setupToggleSwitches();
+}
+
+// Setup toggle switches for gesture cards
+function setupToggleSwitches() {
     const toggleSwitches = document.querySelectorAll('.toggle-switch');
     
     if (toggleSwitches.length) {
@@ -67,14 +307,13 @@ function setupGesturesPage() {
                 this.classList.toggle('on');
                 this.classList.toggle('off');
                 
-                // Get the gesture name from the parent card
-                const gestureCard = this.closest('.gesture-card');
-                const gestureName = gestureCard ? gestureCard.querySelector('.gesture-name').textContent : '';
+                // Get the mapping ID from the data attribute
+                const mappingId = this.getAttribute('data-id');
+                const isEnabled = this.classList.contains('on');
                 
                 // Send status change to main process
-                const isEnabled = this.classList.contains('on');
                 window.api.send('gesture-toggle', {
-                    name: gestureName,
+                    id: mappingId,
                     enabled: isEnabled
                 });
             });
@@ -82,8 +321,114 @@ function setupGesturesPage() {
     }
 }
 
+// Load macro details into the editor
+function loadMacroDetails(macro) {
+    currentMacroId = macro.id;
+    
+    // Set macro name
+    const macroNameInput = document.getElementById('macro-name');
+    if (macroNameInput) {
+        macroNameInput.value = macro.name;
+    }
+
+    // Load actions
+    const actionList = document.querySelector('.action-list');
+    if (actionList) {
+        actionList.innerHTML = '';
+        
+        if (macro.actions && macro.actions.length) {
+            macro.actions.forEach(action => {
+                addActionToList(action.type, actionList, action);
+            });
+        }
+    }
+
+    // Initialize drag-and-drop for actions
+    initDragAndDrop();
+}
+
+// Load mapping details into the editor
+function loadMappingDetails(mapping) {
+    currentMappingId = mapping.id;
+    
+    // Set mapping name
+    const gestureName = document.getElementById('gesture-name');
+    if (gestureName) {
+        gestureName.value = mapping.name;
+    }
+
+    // Set selected macro
+    const macroSelect = document.getElementById('macro-select');
+    if (macroSelect && mapping.macroId) {
+        macroSelect.value = mapping.macroId;
+    }
+
+    // Update gesture blocks
+    const leftHandBlock = document.querySelector('.gesture-block.left-hand');
+    const rightHandBlock = document.querySelector('.gesture-block.right-hand');
+    
+    if (leftHandBlock && mapping.leftHand) {
+        const plusIcon = leftHandBlock.querySelector('.gesture-plus-icon');
+        if (plusIcon) {
+            plusIcon.textContent = mapping.leftHand;
+            plusIcon.classList.add('selected-gesture');
+        }
+    }
+    
+    if (rightHandBlock && mapping.rightHand) {
+        const plusIcon = rightHandBlock.querySelector('.gesture-plus-icon');
+        if (plusIcon) {
+            plusIcon.textContent = mapping.rightHand;
+            plusIcon.classList.add('selected-gesture');
+        }
+    }
+
+    // Update preview
+    const previewCircle = document.querySelector('.gesture-preview-circle');
+    if (previewCircle) {
+        previewCircle.textContent = mapping.emoji || '👍';
+    }
+}
+
 // Mapping Hub page functionality
 function setupMappingHub() {
+    console.log("Setting up Mapping Hub...");
+    
+    // Make sure gesture blocks are displayed properly
+    const gestureGrid = document.querySelector('.gestures-section .gesture-grid');
+    if (gestureGrid) {
+        // Force clear any content that might be interfering
+        const noMappingsElements = gestureGrid.querySelectorAll('.no-mappings, .no-mappings-home, .no-mappings-list');
+        noMappingsElements.forEach(el => el.remove());
+        
+        // Make sure we have both gesture blocks
+        let leftHandBlock = gestureGrid.querySelector('.gesture-block.left-hand');
+        let rightHandBlock = gestureGrid.querySelector('.gesture-block.right-hand');
+        
+        // If blocks don't exist, create them
+        if (!leftHandBlock) {
+            leftHandBlock = document.createElement('div');
+            leftHandBlock.className = 'gesture-block left-hand';
+            leftHandBlock.innerHTML = `
+                <div class="hand-label">Left Hand</div>
+                <div class="gesture-plus-icon">+</div>
+            `;
+            gestureGrid.appendChild(leftHandBlock);
+        }
+        
+        if (!rightHandBlock) {
+            rightHandBlock = document.createElement('div');
+            rightHandBlock.className = 'gesture-block right-hand';
+            rightHandBlock.innerHTML = `
+                <div class="hand-label">Right Hand</div>
+                <div class="gesture-plus-icon">+</div>
+            `;
+            gestureGrid.appendChild(rightHandBlock);
+        }
+        
+        console.log("Gesture blocks initialized");
+    }
+    
     // Gesture selection popup functionality
     const gestureBlocks = document.querySelectorAll('.gesture-block');
     const gestureSelectionPopup = document.querySelector('.gesture-selection-popup');
@@ -96,26 +441,48 @@ function setupMappingHub() {
     let activeGestureBlock = null;
     
     if (gestureBlocks.length && gestureSelectionPopup) {
+        // Ensure popup has the right initial state
+        gestureSelectionPopup.style.display = 'none';
+        
         // Open popup when a gesture block is clicked
         gestureBlocks.forEach(block => {
-            block.addEventListener('click', function() {
+            block.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent any parent clicks
+                // Position and show the popup
                 gestureSelectionPopup.style.display = 'block';
                 activeGestureBlock = this;
+                
+                // Log for debugging
+                console.log('Gesture block clicked, showing popup');
             });
         });
         
         // Close popup
         if (closePopupButton) {
-            closePopupButton.addEventListener('click', function() {
+            closePopupButton.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent any parent clicks
                 gestureSelectionPopup.style.display = 'none';
+                console.log('Popup closed');
             });
         }
+        
+        // Close popup on click outside
+        document.addEventListener('click', function(event) {
+            if (!gestureSelectionPopup.contains(event.target) && 
+                !Array.from(gestureBlocks).some(block => block.contains(event.target)) &&
+                gestureSelectionPopup.style.display === 'block') {
+                gestureSelectionPopup.style.display = 'none';
+                console.log('Popup closed by outside click');
+            }
+        });
         
         // Select a gesture icon
         if (gestureIconItems.length) {
             gestureIconItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent the outside click handler from firing
                     const emoji = this.querySelector('.gesture-emoji').textContent;
+                    console.log('Selected emoji:', emoji);
                     
                     if (activeGestureBlock) {
                         // Replace the plus icon with the selected emoji
@@ -123,6 +490,7 @@ function setupMappingHub() {
                         if (plusIcon) {
                             plusIcon.textContent = emoji;
                             plusIcon.classList.add('selected-gesture');
+                            console.log('Applied emoji to gesture block');
                         }
                     }
                     
@@ -130,6 +498,7 @@ function setupMappingHub() {
                     const previewCircle = document.querySelector('.gesture-preview-circle');
                     if (previewCircle) {
                         previewCircle.textContent = emoji;
+                        console.log('Updated preview circle');
                     }
                     
                     // Close the popup
@@ -142,6 +511,10 @@ function setupMappingHub() {
     // New mapping functionality
     if (newMappingButton) {
         newMappingButton.addEventListener('click', function() {
+            // Reset current mapping ID
+            currentMappingId = null;
+
+            // Clear name field
             const gestureName = document.getElementById('gesture-name');
             if (gestureName) {
                 gestureName.value = '';
@@ -167,6 +540,11 @@ function setupMappingHub() {
             if (macroSelect) {
                 macroSelect.value = '';
             }
+
+            // Remove selected class from all items
+            document.querySelectorAll('.gesture-item').forEach(item => {
+                item.classList.remove('selected');
+            });
         });
     }
     
@@ -177,52 +555,80 @@ function setupMappingHub() {
             const selectedMacro = document.getElementById('macro-select').value;
             const previewEmoji = document.querySelector('.gesture-preview-circle').textContent;
             
-            // Send data to main process
-            window.api.send('save-gesture-mapping', {
-                name: gestureName,
-                emoji: previewEmoji,
-                macro: selectedMacro
-            });
+            if (!gestureName) {
+                alert('Please enter a name for the mapping');
+                return;
+            }
+
+            if (!selectedMacro) {
+                alert('Please select a macro');
+                return;
+            }
+
+            // Get gestures from blocks
+            const leftHandBlock = document.querySelector('.gesture-block.left-hand');
+            const rightHandBlock = document.querySelector('.gesture-block.right-hand');
             
-            // Add to the gesture list
-            const gestureList = document.querySelector('.gesture-list');
-            if (gestureList && gestureName) {
-                const newItem = document.createElement('div');
-                newItem.classList.add('gesture-item');
-                newItem.textContent = gestureName;
-                
-                // Remove selected class from all items
-                document.querySelectorAll('.gesture-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                
-                // Add new item as selected
-                newItem.classList.add('selected');
-                
-                // Add to the beginning of the list
-                if (gestureList.firstChild) {
-                    gestureList.insertBefore(newItem, gestureList.firstChild);
-                } else {
-                    gestureList.appendChild(newItem);
+            let leftHandGesture = '+';
+            let rightHandGesture = '+';
+
+            if (leftHandBlock) {
+                const plusIcon = leftHandBlock.querySelector('.gesture-plus-icon');
+                if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
+                    leftHandGesture = plusIcon.textContent;
                 }
             }
+            
+            if (rightHandBlock) {
+                const plusIcon = rightHandBlock.querySelector('.gesture-plus-icon');
+                if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
+                    rightHandGesture = plusIcon.textContent;
+                }
+            }
+
+            if (leftHandGesture === '+' && rightHandGesture === '+') {
+                alert('Please select at least one gesture');
+                return;
+            }
+
+            // Create mapping object
+            const mapping = {
+                id: currentMappingId || null,
+                name: gestureName,
+                macroId: selectedMacro,
+                emoji: previewEmoji,
+                leftHand: leftHandGesture !== '+' ? leftHandGesture : null,
+                rightHand: rightHandGesture !== '+' ? rightHandGesture : null,
+                enabled: true
+            };
+            
+            // Send data to main process
+            window.api.send('save-gesture-mapping', mapping);
+            
+            // Reset form after saving
+            currentMappingId = mapping.id;
         });
     }
 }
 
 // Macro Hub page functionality
 function setupMacroHub() {
-    const actionList = document.querySelector('.action-list');
-    const actionTypes = document.querySelector('.action-types');
+    const actionTypes = document.querySelectorAll('.action-type');
     const newMacroButton = document.getElementById('new-macro-button');
     const macroNameInput = document.getElementById('macro-name');
     const saveButton = document.getElementById('save-button');
     
     // Clear actions when New Macro is clicked
-    if (newMacroButton && actionList && macroNameInput) {
+    if (newMacroButton && macroNameInput) {
         newMacroButton.addEventListener('click', function() {
+            // Reset current macro ID
+            currentMacroId = null;
+
             // Clear the action list
-            actionList.innerHTML = '';
+            const actionList = document.querySelector('.action-list');
+            if (actionList) {
+                actionList.innerHTML = '';
+            }
             
             // Clear the macro name
             macroNameInput.value = '';
@@ -235,131 +641,112 @@ function setupMacroHub() {
     }
     
     // Action type selection
-    const actionTypeElements = document.querySelectorAll('.action-type');
-    if (actionTypeElements.length && actionList) {
-        actionTypeElements.forEach(actionType => {
+    if (actionTypes.length) {
+        actionTypes.forEach(actionType => {
             actionType.addEventListener('click', function() {
                 const type = this.getAttribute('data-type');
-                addActionToList(type, actionList);
+                const actionList = document.querySelector('.action-list');
                 
-                // Initialize drag-and-drop after adding a new action
-                initDragAndDrop();
+                if (actionList) {
+                    addActionToList(type, actionList);
+                    
+                    // Initialize drag-and-drop after adding a new action
+                    initDragAndDrop();
+                }
             });
         });
     }
-    
-    // Setup key press handlers for any existing action items
-    setupKeyPressHandlers();
-    
-    // Set up drag-and-drop functionality
-    initDragAndDrop();
     
     // Save macro functionality
     if (saveButton && macroNameInput) {
         saveButton.addEventListener('click', function() {
             const macroName = macroNameInput.value;
+            
             if (!macroName) {
                 alert('Please enter a name for the macro');
                 return;
             }
+
+            // Get all actions from the action list
+            const actionItems = document.querySelectorAll('.action-item');
+            const actions = [];
             
-            // Get all action items
-            const actionItems = actionList.querySelectorAll('.action-item');
-            const actions = Array.from(actionItems).map(item => {
+            actionItems.forEach(item => {
                 const type = item.getAttribute('data-type');
-                let value = '';
                 
-                // Handle different types of input elements
-                if (type === 'command') {
-                    const textarea = item.querySelector('textarea');
-                    value = textarea ? textarea.value : '';
+                let actionData = {
+                    type: type
+                };
+
+                if (type === 'keypress') {
+                    const keyInput = item.querySelector('input[type="text"]');
+                    actionData.key = keyInput ? keyInput.value : '';
+                } else if (type === 'command') {
+                    const commandInput = item.querySelector('input[type="text"]');
+                    actionData.command = commandInput ? commandInput.value : '';
                 } else if (type === 'script') {
-                    const fileDisplay = item.querySelector('.file-name-display');
-                    value = fileDisplay ? fileDisplay.textContent : '';
-                } else {
-                    const input = item.querySelector('input');
-                    value = input ? input.value : '';
+                    const scriptPath = item.querySelector('.script-path');
+                    actionData.script = scriptPath ? scriptPath.textContent : '';
                 }
-                
-                return { type, value };
+
+                actions.push(actionData);
             });
-            
-            // Send to main process
-            window.api.send('save-macro', {
+
+            // Create macro object
+            const macro = {
+                id: currentMacroId || null,
                 name: macroName,
                 actions: actions
-            });
+            };
             
-            // Add to macro list if it doesn't exist
-            const macroList = document.querySelector('.macro-list');
-            if (macroList) {
-                let existingItem = null;
-                document.querySelectorAll('.macro-item').forEach(item => {
-                    if (item.textContent === macroName) {
-                        existingItem = item;
-                    }
-                    item.classList.remove('selected');
-                });
-                
-                if (!existingItem) {
-                    const newItem = document.createElement('div');
-                    newItem.classList.add('macro-item', 'selected');
-                    newItem.textContent = macroName;
-                    macroList.appendChild(newItem);
-                } else {
-                    existingItem.classList.add('selected');
-                }
-            }
+            // Send data to main process
+            window.api.send('save-macro', macro);
+            
+            // Update current macro ID
+            currentMacroId = macro.id;
         });
     }
 }
 
-// Initialize drag-and-drop functionality for action items
+// Initialize drag and drop for action items
 function initDragAndDrop() {
+    const actionItems = document.querySelectorAll('.action-item');
     const actionList = document.querySelector('.action-list');
-    if (!actionList) return;
     
-    const actionItems = actionList.querySelectorAll('.action-item');
+    if (!actionItems.length || !actionList) return;
     
-    // Add drag handle and draggable attributes to action items
+    // Add event listeners for drag and drop
     actionItems.forEach(item => {
-        // Skip if this item already has a drag handle
-        if (item.querySelector('.drag-handle')) return;
+        item.setAttribute('draggable', 'true');
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragend', handleDragEnd);
         
-        const actionHeader = item.querySelector('.action-header');
-        if (actionHeader) {
-            // Create and add drag handle
-            const dragHandle = document.createElement('div');
-            dragHandle.className = 'drag-handle';
-            dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
-            actionHeader.insertBefore(dragHandle, actionHeader.firstChild);
-            
-            // Make the item draggable
-            item.setAttribute('draggable', 'true');
-            
-            // Add drag event listeners
-            item.addEventListener('dragstart', handleDragStart);
-            item.addEventListener('dragover', handleDragOver);
-            item.addEventListener('dragenter', handleDragEnter);
-            item.addEventListener('dragleave', handleDragLeave);
-            item.addEventListener('drop', handleDrop);
-            item.addEventListener('dragend', handleDragEnd);
+        // Add delete button functionality
+        const deleteButton = item.querySelector('.action-delete');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function() {
+                item.remove();
+            });
         }
     });
 }
 
-// Drag-and-drop event handlers
-let draggedItem = null;
-let dragPosition = null;
+// Drag and drop handlers
+let dragSrcEl = null;
 
 function handleDragStart(e) {
-    this.style.opacity = '0.4';
-    draggedItem = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-    
-    // Add a class to indicate dragging state
+    // Add a class to indicate dragging
     this.classList.add('dragging');
+    
+    // Store the source element
+    dragSrcEl = this;
+    
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
 }
 
 function handleDragOver(e) {
@@ -369,270 +756,185 @@ function handleDragOver(e) {
     
     e.dataTransfer.dropEffect = 'move';
     
-    // Don't do anything if dragging over the original element
-    if (this === draggedItem) {
-        return false;
-    }
-    
-    // Determine whether to show top or bottom indicator
-    const rect = this.getBoundingClientRect();
-    const mouseY = e.clientY;
-    const threshold = rect.top + (rect.height / 2);
-    
-    // Remove previous indicators
-    this.classList.remove('drag-over-top', 'drag-over-bottom');
-    
-    // Add appropriate indicator
-    if (mouseY < threshold) {
-        this.classList.add('drag-over-top');
-        dragPosition = 'before';
-    } else {
-        this.classList.add('drag-over-bottom');
-        dragPosition = 'after';
-    }
-    
     return false;
 }
 
 function handleDragEnter(e) {
-    // We don't need the drag-over class anymore as we have more specific indicators
-    // this.classList.add('drag-over');
+    // Add a class to indicate a valid drop target
+    this.classList.add('over');
 }
 
 function handleDragLeave(e) {
-    // Remove indicators when leaving an element
-    this.classList.remove('drag-over-top', 'drag-over-bottom');
+    // Remove the class when leaving a potential drop target
+    this.classList.remove('over');
 }
 
 function handleDrop(e) {
+    // Stop the browser from redirecting
     if (e.stopPropagation) {
         e.stopPropagation();
     }
     
-    // Don't do anything if dropping on the original element
-    if (draggedItem === this) {
-        return false;
-    }
-    
-    const actionList = this.parentNode;
-    
-    // Insert according to the determined position
-    if (dragPosition === 'before') {
-        actionList.insertBefore(draggedItem, this);
-    } else {
-        if (this.nextSibling) {
-            actionList.insertBefore(draggedItem, this.nextSibling);
+    // Only proceed if we're not dropping on the original element
+    if (dragSrcEl != this) {
+        // Get the action list
+        const actionList = document.querySelector('.action-list');
+        
+        // Get all action items
+        const items = Array.from(actionList.querySelectorAll('.action-item'));
+        
+        // Find the indices
+        const fromIndex = items.indexOf(dragSrcEl);
+        const toIndex = items.indexOf(this);
+        
+        // Remove the source element
+        dragSrcEl.remove();
+        
+        // Insert the source element at the new position
+        if (toIndex < items.length - 1) {
+            this.insertAdjacentElement(toIndex > fromIndex ? 'afterend' : 'beforebegin', dragSrcEl);
         } else {
-            actionList.appendChild(draggedItem);
+            actionList.appendChild(dragSrcEl);
         }
+        
+        // Add event listeners to the source element again
+        dragSrcEl.addEventListener('dragstart', handleDragStart);
+        dragSrcEl.addEventListener('dragover', handleDragOver);
+        dragSrcEl.addEventListener('dragenter', handleDragEnter);
+        dragSrcEl.addEventListener('dragleave', handleDragLeave);
+        dragSrcEl.addEventListener('drop', handleDrop);
+        dragSrcEl.addEventListener('dragend', handleDragEnd);
     }
-    
-    // Re-apply event listeners and setup after moving
-    setupKeyPressHandlers();
     
     return false;
 }
 
 function handleDragEnd(e) {
-    // Reset styles
-    this.style.opacity = '1';
+    // Remove all drag-related classes
     this.classList.remove('dragging');
     
-    // Remove all drop indicators
     document.querySelectorAll('.action-item').forEach(item => {
-        item.classList.remove('drag-over-top', 'drag-over-bottom');
+        item.classList.remove('over');
     });
 }
 
-// Helper function to add an action to the action list
-function addActionToList(type, actionList) {
+// Add an action to the action list
+function addActionToList(type, actionList, existingAction = null) {
+    // Create action item
     const actionItem = document.createElement('div');
     actionItem.classList.add('action-item');
     actionItem.setAttribute('data-type', type);
     
-    let actionContent = '';
+    // Add common elements
+    const actionHeader = document.createElement('div');
+    actionHeader.classList.add('action-header');
     
-    switch (type) {
-        case 'keypress':
-            actionContent = `
-                <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
-                    <span class="action-type-label">Key Press</span>
-                    <button class="remove-action">×</button>
-                </div>
-                <div class="action-content">
-                    <input type="text" class="key-capture-input" placeholder="Click to capture key combination" readonly>
-                </div>
-            `;
-            break;
-        case 'script':
-            actionContent = `
-                <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
-                    <span class="action-type-label">Script</span>
-                    <button class="remove-action">×</button>
-                </div>
-                <div class="action-content">
-                    <div class="file-upload-container">
-                        <input type="file" id="file-${Date.now()}" class="file-input">
-                        <label for="file-${Date.now()}" class="file-upload-button">Choose File</label>
-                        <div class="file-name-display">No file chosen</div>
-                    </div>
-                </div>
-            `;
-            break;
-        case 'command':
-            actionContent = `
-                <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
-                    <span class="action-type-label">Command Line</span>
-                    <button class="remove-action">×</button>
-                </div>
-                <div class="action-content">
-                    <textarea class="command-input" placeholder="Enter command"></textarea>
-                </div>
-            `;
-            break;
+    const actionTitle = document.createElement('div');
+    actionTitle.classList.add('action-title');
+    
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('action-delete');
+    deleteButton.innerHTML = '&times;';
+    deleteButton.title = 'Delete action';
+    
+    actionHeader.appendChild(actionTitle);
+    actionHeader.appendChild(deleteButton);
+    actionItem.appendChild(actionHeader);
+    
+    // Add type-specific content
+    const actionContent = document.createElement('div');
+    actionContent.classList.add('action-content');
+    
+    if (type === 'keypress') {
+        actionTitle.textContent = 'Key Press';
+        
+        const keyInput = document.createElement('input');
+        keyInput.type = 'text';
+        keyInput.placeholder = 'Press a key...';
+        keyInput.value = existingAction && existingAction.key ? existingAction.key : '';
+        keyInput.classList.add('key-input');
+        
+        actionContent.appendChild(keyInput);
+        
+        // Add key press handler
+        setupKeyPressHandlerForInput(keyInput);
+    } else if (type === 'command') {
+        actionTitle.textContent = 'Command Line';
+        
+        const commandInput = document.createElement('input');
+        commandInput.type = 'text';
+        commandInput.placeholder = 'Enter command...';
+        commandInput.value = existingAction && existingAction.command ? existingAction.command : '';
+        commandInput.classList.add('command-input');
+        
+        actionContent.appendChild(commandInput);
+    } else if (type === 'script') {
+        actionTitle.textContent = 'Script';
+        
+        const uploadButton = document.createElement('button');
+        uploadButton.textContent = 'Upload Script';
+        uploadButton.classList.add('upload-button');
+        
+        const scriptPath = document.createElement('div');
+        scriptPath.classList.add('script-path');
+        scriptPath.textContent = existingAction && existingAction.script ? existingAction.script : 'No script selected';
+        
+        actionContent.appendChild(uploadButton);
+        actionContent.appendChild(scriptPath);
+        
+        // Add upload handler
+        uploadButton.addEventListener('click', function() {
+            // This would typically open a file dialog
+            // For now, just simulate selecting a file
+            scriptPath.textContent = 'C:\\path\\to\\script.js';
+        });
     }
     
-    actionItem.innerHTML = actionContent;
+    actionItem.appendChild(actionContent);
     actionList.appendChild(actionItem);
     
-    // Make the item draggable
-    actionItem.setAttribute('draggable', 'true');
-    
-    // Add drag event listeners
-    actionItem.addEventListener('dragstart', handleDragStart);
-    actionItem.addEventListener('dragover', handleDragOver);
-    actionItem.addEventListener('dragenter', handleDragEnter);
-    actionItem.addEventListener('dragleave', handleDragLeave);
-    actionItem.addEventListener('drop', handleDrop);
-    actionItem.addEventListener('dragend', handleDragEnd);
-    
-    // Add event listener to remove button
-    const removeButton = actionItem.querySelector('.remove-action');
-    if (removeButton) {
-        removeButton.addEventListener('click', function() {
-            actionList.removeChild(actionItem);
-        });
-    }
-    
-    // Set up key press capture for keypress type
-    if (type === 'keypress') {
-        setupKeyPressHandlerForInput(actionItem.querySelector('.key-capture-input'));
-    }
-    
-    // Set up file input handling for script type
-    if (type === 'script') {
-        const fileInput = actionItem.querySelector('.file-input');
-        const fileLabel = actionItem.querySelector('.file-upload-button');
-        const fileNameDisplay = actionItem.querySelector('.file-name-display');
-        
-        // Fix the for attribute of the label
-        fileLabel.setAttribute('for', fileInput.id);
-        
-        fileInput.addEventListener('change', function(e) {
-            if (this.files && this.files.length > 0) {
-                fileNameDisplay.textContent = this.files[0].name;
-            } else {
-                fileNameDisplay.textContent = 'No file chosen';
-            }
-        });
-    }
-    
-    // Auto-resize textarea for command input
-    if (type === 'command') {
-        const textarea = actionItem.querySelector('.command-input');
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-    }
+    return actionItem;
 }
 
-// Helper function to set up key press handlers for all key capture inputs
+// Setup key press handlers for the entire document
 function setupKeyPressHandlers() {
-    document.querySelectorAll('.key-capture-input').forEach(input => {
+    document.querySelectorAll('.key-input').forEach(input => {
         setupKeyPressHandlerForInput(input);
     });
 }
 
-// Helper function to set up key press capture for a specific input
+// Setup key press handler for a specific input
 function setupKeyPressHandlerForInput(input) {
-    if (!input) return;
-    
-    let pressedKeys = new Set();
-    let keyCombination = '';
-    
-    input.addEventListener('focus', function() {
-        this.value = '';
-        this.placeholder = 'Press key combination...';
-        pressedKeys.clear();
-        keyCombination = '';
-    });
-    
-    input.addEventListener('blur', function() {
-        if (!this.value) {
-            this.placeholder = 'Click to capture key combination';
-        }
-    });
-    
     input.addEventListener('keydown', function(e) {
         e.preventDefault();
         
-        // Get the key name in a consistent format
-        let keyName = e.key;
+        let key = '';
         
-        // For special keys, use a more readable format
-        if (keyName === ' ') keyName = 'Space';
-        if (keyName === 'Control') keyName = 'Ctrl';
-        if (keyName === 'Escape') keyName = 'Esc';
-        if (keyName === 'ArrowUp') keyName = '↑';
-        if (keyName === 'ArrowDown') keyName = '↓';
-        if (keyName === 'ArrowLeft') keyName = '←';
-        if (keyName === 'ArrowRight') keyName = '→';
-        
-        // Format the key to be more readable
-        keyName = keyName.charAt(0).toUpperCase() + keyName.slice(1).toLowerCase();
-        
-        // Add modifiers first
-        if (e.ctrlKey && !pressedKeys.has('Ctrl')) pressedKeys.add('Ctrl');
-        if (e.shiftKey && !pressedKeys.has('Shift')) pressedKeys.add('Shift');
-        if (e.altKey && !pressedKeys.has('Alt')) pressedKeys.add('Alt');
-        if (e.metaKey && !pressedKeys.has('Meta')) pressedKeys.add('Meta');
-        
-        // Add the current key if it's not a modifier
-        if (!['Ctrl', 'Shift', 'Alt', 'Meta'].includes(keyName)) {
-            pressedKeys.add(keyName);
+        // Handle special keys
+        if (e.key === ' ') {
+            key = 'Space';
+        } else if (e.key === 'Control') {
+            key = 'Ctrl';
+        } else if (e.key === 'Meta') {
+            key = 'Win';
+        } else if (e.key === 'ArrowUp') {
+            key = 'Up';
+        } else if (e.key === 'ArrowDown') {
+            key = 'Down';
+        } else if (e.key === 'ArrowLeft') {
+            key = 'Left';
+        } else if (e.key === 'ArrowRight') {
+            key = 'Right';
+        } else if (e.key.length === 1) {
+            key = e.key.toUpperCase();
+        } else {
+            key = e.key;
         }
         
-        // Convert Set to Array for display
-        const keysArray = Array.from(pressedKeys);
-        keyCombination = keysArray.join(' + ');
+        // Update the input value
+        this.value = key;
         
-        this.value = keyCombination;
-    });
-    
-    // Add keyup to handle multi-key combinations better
-    input.addEventListener('keyup', function(e) {
-        // Do not clear the input on keyup, just update the pressed keys set
-        // This allows for multi-key combinations
-        
-        // Get the key name in a consistent format
-        let keyName = e.key;
-        
-        // For special keys, use a more readable format
-        if (keyName === ' ') keyName = 'Space';
-        if (keyName === 'Control') keyName = 'Ctrl';
-        if (keyName === 'Escape') keyName = 'Esc';
-        if (keyName === 'ArrowUp') keyName = '↑';
-        if (keyName === 'ArrowDown') keyName = '↓';
-        if (keyName === 'ArrowLeft') keyName = '←';
-        if (keyName === 'ArrowRight') keyName = '→';
-        
-        keyName = keyName.charAt(0).toUpperCase() + keyName.slice(1).toLowerCase();
-        
-        // Let the value persist when keys are released
-        // This ensures the combination stays visible
+        // Remove focus
+        this.blur();
     });
 } 
