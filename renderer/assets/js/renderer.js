@@ -59,27 +59,89 @@ function setupIpcCommunication() {
 
 // Main menu / gestures page functionality
 function setupGesturesPage() {
-    const toggleSwitches = document.querySelectorAll('.toggle-switch');
+    const gestureGrid = document.querySelector('.gesture-grid');
     
-    if (toggleSwitches.length) {
-        toggleSwitches.forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                this.classList.toggle('on');
-                this.classList.toggle('off');
+    // Load saved mappings
+    window.api.send('load-mappings');
+    
+    // Receive saved mappings from the main process
+    window.api.receive('mappings-loaded', (loadedMappings) => {
+        // Clear the existing grid
+        gestureGrid.innerHTML = '';
+        
+        // Add mappings to the grid
+        if (loadedMappings && loadedMappings.length > 0) {
+            loadedMappings.forEach(mapping => {
+                // Create gesture card
+                const card = document.createElement('div');
+                card.classList.add('gesture-card');
                 
-                // Get the gesture name from the parent card
-                const gestureCard = this.closest('.gesture-card');
-                const gestureName = gestureCard ? gestureCard.querySelector('.gesture-name').textContent : '';
+                // Gesture name
+                const nameDIv = document.createElement('div');
+                nameDIv.classList.add('gesture-name');
+                nameDIv.textContent = mapping.name;
+                card.appendChild(nameDIv);
                 
-                // Send status change to main process
-                const isEnabled = this.classList.contains('on');
-                window.api.send('gesture-toggle', {
-                    name: gestureName,
-                    enabled: isEnabled
+                // Gesture icon
+                const iconDiv = document.createElement('div');
+                iconDiv.classList.add('gesture-icon');
+                
+                const circleIcon = document.createElement('div');
+                circleIcon.classList.add('circle-icon');
+                // Use the preview emoji or any available gesture
+                circleIcon.textContent = mapping.previewEmoji || mapping.rightGesture || mapping.leftGesture || '👍';
+                
+                iconDiv.appendChild(circleIcon);
+                card.appendChild(iconDiv);
+                
+                // Toggle container
+                const toggleContainer = document.createElement('div');
+                toggleContainer.classList.add('toggle-container');
+                
+                const toggleSwitch = document.createElement('div');
+                toggleSwitch.classList.add('toggle-switch');
+                // Set initial state
+                if (mapping.enabled) {
+                    toggleSwitch.classList.add('on');
+                } else {
+                    toggleSwitch.classList.add('off');
+                }
+                
+                const onLabel = document.createElement('span');
+                onLabel.classList.add('toggle-label');
+                onLabel.textContent = 'ON';
+                
+                const offLabel = document.createElement('span');
+                offLabel.classList.add('toggle-label');
+                offLabel.textContent = 'OFF';
+                
+                const toggleSlider = document.createElement('div');
+                toggleSlider.classList.add('toggle-slider');
+                
+                toggleSwitch.appendChild(onLabel);
+                toggleSwitch.appendChild(offLabel);
+                toggleSwitch.appendChild(toggleSlider);
+                toggleContainer.appendChild(toggleSwitch);
+                card.appendChild(toggleContainer);
+                
+                // Add the card to the grid
+                gestureGrid.appendChild(card);
+                
+                // Add toggle functionality
+                toggleSwitch.addEventListener('click', function() {
+                    this.classList.toggle('on');
+                    this.classList.toggle('off');
+                    
+                    // Send status change to main process
+                    const isEnabled = this.classList.contains('on');
+                    window.api.send('gesture-toggle', {
+                        name: mapping.name,
+                        enabled: isEnabled
+                    });
                 });
             });
-        });
-    }
+        }
+    });
 }
 
 // Mapping Hub page functionality
@@ -91,9 +153,156 @@ function setupMappingHub() {
     const gestureIconItems = document.querySelectorAll('.gesture-icon-item');
     const newMappingButton = document.getElementById('new-mapping-button');
     const saveGestureButton = document.getElementById('save-gesture-button');
+    const gestureName = document.getElementById('gesture-name');
+    const macroSelect = document.getElementById('macro-select');
+    const gestureList = document.querySelector('.gesture-list');
     
     // Track which gesture block is currently being edited
     let activeGestureBlock = null;
+    
+    // Load saved mappings when the page loads
+    window.api.send('load-mappings');
+    
+    // Load saved macros for dropdown
+    window.api.send('load-macros');
+    
+    // Receive saved macros from the main process
+    window.api.receive('macros-loaded', (loadedMacros) => {
+        // Clear the existing options
+        macroSelect.innerHTML = '<option value="">Select a macro...</option>';
+        
+        // Add macros to the select
+        if (loadedMacros && loadedMacros.length > 0) {
+            loadedMacros.forEach(macro => {
+                const option = document.createElement('option');
+                option.value = macro.name;
+                option.textContent = macro.name;
+                macroSelect.appendChild(option);
+            });
+        }
+    });
+    
+    // Receive saved mappings from the main process
+    window.api.receive('mappings-loaded', (loadedMappings) => {
+        // Clear the existing mapping list
+        gestureList.innerHTML = '';
+        
+        // Add mappings to the list
+        if (loadedMappings && loadedMappings.length > 0) {
+            loadedMappings.forEach(mapping => {
+                const mappingItem = document.createElement('div');
+                mappingItem.classList.add('gesture-item');
+                mappingItem.textContent = mapping.name;
+                gestureList.appendChild(mappingItem);
+                
+                // Add click handler to select mapping
+                mappingItem.addEventListener('click', function() {
+                    // Remove selected class from all items
+                    document.querySelectorAll('.gesture-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to this item
+                    this.classList.add('selected');
+                    
+                    // Load the mapping details
+                    loadMappingDetails(mapping);
+                });
+            });
+        }
+    });
+    
+    // Function to load a mapping's details
+    function loadMappingDetails(mapping) {
+        // Set the mapping name
+        gestureName.value = mapping.name;
+        
+        // Set the macro
+        macroSelect.value = mapping.macro || '';
+        
+        // Set the gesture emojis
+        const leftBlock = document.querySelector('.gesture-block.left-hand');
+        const rightBlock = document.querySelector('.gesture-block.right-hand');
+        
+        if (leftBlock) {
+            const plusIcon = leftBlock.querySelector('.gesture-plus-icon');
+            if (plusIcon) {
+                if (mapping.leftGesture) {
+                    plusIcon.textContent = mapping.leftGesture;
+                    plusIcon.classList.add('selected-gesture');
+                } else {
+                    plusIcon.textContent = '+';
+                    plusIcon.classList.remove('selected-gesture');
+                }
+            }
+        }
+        
+        if (rightBlock) {
+            const plusIcon = rightBlock.querySelector('.gesture-plus-icon');
+            if (plusIcon) {
+                if (mapping.rightGesture) {
+                    plusIcon.textContent = mapping.rightGesture;
+                    plusIcon.classList.add('selected-gesture');
+                } else {
+                    plusIcon.textContent = '+';
+                    plusIcon.classList.remove('selected-gesture');
+                }
+            }
+        }
+        
+        // Update the preview
+        const previewCircle = document.querySelector('.gesture-preview-circle');
+        if (previewCircle) {
+            // Use any selected gesture for the preview, prioritize right hand
+            if (mapping.rightGesture) {
+                previewCircle.textContent = mapping.rightGesture;
+            } else if (mapping.leftGesture) {
+                previewCircle.textContent = mapping.leftGesture;
+            } else {
+                previewCircle.textContent = '👍'; // Default emoji
+            }
+        }
+        
+        // Add a delete button if it doesn't exist
+        let deleteButton = document.querySelector('.delete-mapping-button');
+        if (!deleteButton) {
+            deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-mapping-button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.marginLeft = '10px';
+            deleteButton.style.backgroundColor = '#ff4d4d';
+            
+            // Insert after the save button
+            saveGestureButton.parentNode.insertBefore(deleteButton, saveGestureButton.nextSibling);
+            
+            // Add click handler for the delete button
+            deleteButton.addEventListener('click', function() {
+                const mappingName = gestureName.value;
+                if (mappingName && confirm(`Are you sure you want to delete the mapping "${mappingName}"?`)) {
+                    window.api.send('delete-mapping', mappingName);
+                    
+                    // Clear the form
+                    gestureName.value = '';
+                    macroSelect.value = '';
+                    
+                    // Reset gesture blocks
+                    gestureBlocks.forEach(block => {
+                        const plusIcon = block.querySelector('.gesture-plus-icon');
+                        if (plusIcon) {
+                            plusIcon.textContent = '+';
+                            plusIcon.classList.remove('selected-gesture');
+                        }
+                    });
+                    
+                    // Reset preview
+                    const previewCircle = document.querySelector('.gesture-preview-circle');
+                    if (previewCircle) {
+                        previewCircle.textContent = '👍';
+                    }
+                }
+            });
+        }
+    }
     
     if (gestureBlocks.length && gestureSelectionPopup) {
         // Open popup when a gesture block is clicked
@@ -142,7 +351,7 @@ function setupMappingHub() {
     // New mapping functionality
     if (newMappingButton) {
         newMappingButton.addEventListener('click', function() {
-            const gestureName = document.getElementById('gesture-name');
+            // Clear the mapping name
             if (gestureName) {
                 gestureName.value = '';
             }
@@ -163,49 +372,97 @@ function setupMappingHub() {
             }
             
             // Reset macro selection
-            const macroSelect = document.getElementById('macro-select');
             if (macroSelect) {
                 macroSelect.value = '';
+            }
+            
+            // Remove selected class from all items
+            document.querySelectorAll('.gesture-item.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Remove the delete button if it exists
+            const deleteButton = document.querySelector('.delete-mapping-button');
+            if (deleteButton) {
+                deleteButton.parentNode.removeChild(deleteButton);
             }
         });
     }
     
-    // Save gesture functionality
+    // Save gesture mapping functionality
     if (saveGestureButton) {
         saveGestureButton.addEventListener('click', function() {
-            const gestureName = document.getElementById('gesture-name').value;
-            const selectedMacro = document.getElementById('macro-select').value;
-            const previewEmoji = document.querySelector('.gesture-preview-circle').textContent;
+            const mappingName = gestureName.value;
+            if (!mappingName) {
+                alert('Please enter a name for the mapping');
+                return;
+            }
             
-            // Send data to main process
-            window.api.send('save-gesture-mapping', {
-                name: gestureName,
-                emoji: previewEmoji,
-                macro: selectedMacro
-            });
+            const selectedMacro = macroSelect.value;
+            if (!selectedMacro) {
+                alert('Please select a macro');
+                return;
+            }
             
-            // Add to the gesture list
-            const gestureList = document.querySelector('.gesture-list');
-            if (gestureList && gestureName) {
-                const newItem = document.createElement('div');
-                newItem.classList.add('gesture-item');
-                newItem.textContent = gestureName;
-                
-                // Remove selected class from all items
-                document.querySelectorAll('.gesture-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                
-                // Add new item as selected
-                newItem.classList.add('selected');
-                
-                // Add to the beginning of the list
-                if (gestureList.firstChild) {
-                    gestureList.insertBefore(newItem, gestureList.firstChild);
-                } else {
-                    gestureList.appendChild(newItem);
+            // Get the gesture emojis
+            const leftBlock = document.querySelector('.gesture-block.left-hand');
+            const rightBlock = document.querySelector('.gesture-block.right-hand');
+            
+            let leftGesture = null;
+            let rightGesture = null;
+            
+            if (leftBlock) {
+                const plusIcon = leftBlock.querySelector('.gesture-plus-icon');
+                if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
+                    leftGesture = plusIcon.textContent;
                 }
             }
+            
+            if (rightBlock) {
+                const plusIcon = rightBlock.querySelector('.gesture-plus-icon');
+                if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
+                    rightGesture = plusIcon.textContent;
+                }
+            }
+            
+            // Ensure at least one gesture is selected
+            if (!leftGesture && !rightGesture) {
+                alert('Please select at least one gesture (left or right hand)');
+                return;
+            }
+            
+            // Get preview emoji for display
+            const previewEmoji = document.querySelector('.gesture-preview-circle').textContent;
+            
+            // Send mapping data to main process
+            window.api.send('save-gesture-mapping', {
+                name: mappingName,
+                macro: selectedMacro,
+                leftGesture: leftGesture,
+                rightGesture: rightGesture,
+                previewEmoji: previewEmoji,
+                enabled: true // New mappings are enabled by default
+            });
+            
+            // The list will be updated when the mappings-loaded event is received
+        });
+    }
+
+    // Search functionality for mappings
+    const mappingSearch = document.getElementById('mapping-search');
+    if (mappingSearch) {
+        mappingSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const mappingItems = document.querySelectorAll('.gesture-item');
+            
+            mappingItems.forEach(item => {
+                const mappingName = item.textContent.toLowerCase();
+                if (mappingName.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         });
     }
 }
@@ -217,6 +474,122 @@ function setupMacroHub() {
     const newMacroButton = document.getElementById('new-macro-button');
     const macroNameInput = document.getElementById('macro-name');
     const saveButton = document.getElementById('save-button');
+    const macroList = document.querySelector('.macro-list');
+    
+    // Load saved macros when the page loads
+    window.api.send('load-macros');
+    
+    // Receive saved macros from the main process
+    window.api.receive('macros-loaded', (loadedMacros) => {
+        // Clear the existing macro list
+        macroList.innerHTML = '';
+        
+        // Add macros to the list
+        if (loadedMacros && loadedMacros.length > 0) {
+            loadedMacros.forEach(macro => {
+                const macroItem = document.createElement('div');
+                macroItem.classList.add('macro-item');
+                macroItem.textContent = macro.name;
+                macroList.appendChild(macroItem);
+                
+                // Add click handler to select macro
+                macroItem.addEventListener('click', function() {
+                    // Remove selected class from all items
+                    document.querySelectorAll('.macro-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to this item
+                    this.classList.add('selected');
+                    
+                    // Load the macro details
+                    loadMacroDetails(macro);
+                });
+            });
+        }
+    });
+    
+    // Function to load a macro's details
+    function loadMacroDetails(macro) {
+        // Set the macro name
+        macroNameInput.value = macro.name;
+        
+        // Add a delete button if it doesn't exist
+        let deleteButton = document.querySelector('.delete-macro-button');
+        if (!deleteButton) {
+            deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-macro-button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.marginLeft = '10px';
+            deleteButton.style.backgroundColor = '#ff4d4d';
+            
+            // Insert after the save button
+            saveButton.parentNode.insertBefore(deleteButton, saveButton.nextSibling);
+            
+            // Add click handler for the delete button
+            deleteButton.addEventListener('click', function() {
+                const macroName = macroNameInput.value;
+                if (macroName && confirm(`Are you sure you want to delete the macro "${macroName}"?`)) {
+                    window.api.send('delete-macro', macroName);
+                    
+                    // Clear the form
+                    macroNameInput.value = '';
+                    actionList.innerHTML = '';
+                }
+            });
+        }
+        
+        // Clear the action list
+        actionList.innerHTML = '';
+        
+        // Add each action to the list
+        if (macro.actions && macro.actions.length > 0) {
+            macro.actions.forEach(action => {
+                addActionToList(action.type, actionList);
+                
+                // Set the action value
+                const actionItem = actionList.lastElementChild;
+                if (actionItem) {
+                    if (action.type === 'keypress') {
+                        const input = actionItem.querySelector('input');
+                        if (input) input.value = action.value;
+                    } else if (action.type === 'command') {
+                        const textarea = actionItem.querySelector('textarea');
+                        if (textarea) textarea.value = action.value;
+                    } else if (action.type === 'script') {
+                        const fileDisplay = actionItem.querySelector('.file-name-display');
+                        if (fileDisplay) fileDisplay.textContent = action.value || 'No file chosen';
+                    }
+                }
+            });
+            
+            // Initialize drag-and-drop
+            initDragAndDrop();
+            
+            // Setup key press handlers
+            setupKeyPressHandlers();
+        }
+    }
+    
+    // Add click handlers to macro items
+    if (macroList) {
+        const macroItems = macroList.querySelectorAll('.macro-item');
+        macroItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove selected class from all items
+                macroItems.forEach(i => i.classList.remove('selected'));
+                
+                // Add selected class to this item
+                this.classList.add('selected');
+                
+                // Get the macro name
+                const macroName = this.textContent;
+                
+                // Request the macro details from the main process
+                window.api.send('load-macros');
+            });
+        });
+    }
     
     // Clear actions when New Macro is clicked
     if (newMacroButton && actionList && macroNameInput) {
@@ -231,6 +604,12 @@ function setupMacroHub() {
             document.querySelectorAll('.macro-item.selected').forEach(item => {
                 item.classList.remove('selected');
             });
+            
+            // Remove the delete button if it exists
+            const deleteButton = document.querySelector('.delete-macro-button');
+            if (deleteButton) {
+                deleteButton.parentNode.removeChild(deleteButton);
+            }
         });
     }
     
@@ -276,6 +655,8 @@ function setupMacroHub() {
                 } else if (type === 'script') {
                     const fileDisplay = item.querySelector('.file-name-display');
                     value = fileDisplay ? fileDisplay.textContent : '';
+                    // Don't save "No file chosen" as a value
+                    if (value === 'No file chosen') value = '';
                 } else {
                     const input = item.querySelector('input');
                     value = input ? input.value : '';
@@ -290,26 +671,25 @@ function setupMacroHub() {
                 actions: actions
             });
             
-            // Add to macro list if it doesn't exist
-            const macroList = document.querySelector('.macro-list');
-            if (macroList) {
-                let existingItem = null;
-                document.querySelectorAll('.macro-item').forEach(item => {
-                    if (item.textContent === macroName) {
-                        existingItem = item;
-                    }
-                    item.classList.remove('selected');
-                });
-                
-                if (!existingItem) {
-                    const newItem = document.createElement('div');
-                    newItem.classList.add('macro-item', 'selected');
-                    newItem.textContent = macroName;
-                    macroList.appendChild(newItem);
+            // The list will be updated when the macros-loaded event is received
+        });
+    }
+
+    // Search functionality for macros
+    const macroSearch = document.getElementById('macro-search');
+    if (macroSearch) {
+        macroSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const macroItems = document.querySelectorAll('.macro-item');
+            
+            macroItems.forEach(item => {
+                const macroName = item.textContent.toLowerCase();
+                if (macroName.includes(searchTerm)) {
+                    item.style.display = 'block';
                 } else {
-                    existingItem.classList.add('selected');
+                    item.style.display = 'none';
                 }
-            }
+            });
         });
     }
 }
