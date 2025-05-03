@@ -237,4 +237,60 @@ body {
     to {
         opacity: 1;
     }
+}
+
+/* Detection controls and button */
+.detection-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.detection-button {
+    background-color: #5755d9;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.detection-button.detecting {
+    background-color: #ff3e3e;
+}
+
+.detection-button:hover {
+    background-color: #4744c9;
+}
+
+.detection-button.detecting:hover {
+    background-color: #e62222;
+}
+
+/* Gesture status indicator */
+.gesture-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 100;
+    display: none;
+}
+
+.gesture-status.visible {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 } 

@@ -41,6 +41,9 @@
 
         <!-- Main content area -->
         <div class="content">
+            <div class="detection-controls">
+                <button id="detection-toggle" class="detection-button">Start Detecting</button>
+            </div>
             <h1>Home</h1>
             <div class="gesture-grid">
                 <!-- Gesture cards will be added here dynamically -->
@@ -50,6 +53,9 @@
         <!-- Visual scrollbar -->
         <div class="scrollbar"></div>
     </div>
+
+    <!-- Gesture status indicator -->
+    <div id="gesture-status" class="gesture-status">Detected: <span id="detected-gesture">None</span></div>
 
     <script src="./assets/js/renderer.js"></script>
 </body>

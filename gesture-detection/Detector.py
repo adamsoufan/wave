@@ -6,19 +6,19 @@ import numpy as np
 import pickle
 import time
 import json
-# import socket  # ←‑ uncomment if you want TCP streaming
+import socket  # Uncommented for TCP streaming
 
 # ─────────────── configuration ────────────────
 MODEL_PATH   = 'hand_gesture_knn_model.pkl'
-THRESHOLD    = 0.5          # > THRESHOLD  ⇒ "unknown"
+THRESHOLD    = 0.5          # > THRESHOLD  ⇒ "unknown"
 COOLDOWN_SEC = 0.75         # debounce period
 PORT         = 5050         # TCP port (if socket used)
 HEADLESS     = True         # False shows a debug window
 # ───────────────────────────────────────────────
 
-# Optional socket setup
-# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# sock.connect(("127.0.0.1", PORT))
+# Socket setup
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(("127.0.0.1", PORT))
 
 # Load trained KNN model
 with open(MODEL_PATH, 'rb') as f:
@@ -73,7 +73,7 @@ while cap.isOpened():
             if gesture != "unknown" and gesture != last_sent and (now - last_time) > COOLDOWN_SEC:
                 last_sent, last_time = gesture, now
                 print(f"[GESTURE] {gesture}")  # stdout route
-                # sock.sendall((json.dumps({"gesture": gesture}) + "\n").encode())
+                sock.sendall((json.dumps({"gesture": gesture}) + "\n").encode())
 
             # Optional debug window
             if not HEADLESS:
@@ -90,5 +90,5 @@ while cap.isOpened():
 cap.release()
 if not HEADLESS:
     cv2.destroyAllWindows()
-# sock.close()   # if socket streaming is enabled
+sock.close()   # if socket streaming is enabled
 

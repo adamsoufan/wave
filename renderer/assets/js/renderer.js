@@ -60,6 +60,78 @@ function setupIpcCommunication() {
 // Main menu / gestures page functionality
 function setupGesturesPage() {
     const gestureGrid = document.querySelector('.gesture-grid');
+    const detectionToggle = document.getElementById('detection-toggle');
+    const gestureStatus = document.getElementById('gesture-status');
+    const detectedGesture = document.getElementById('detected-gesture');
+    
+    // Flag to track detection state
+    let isDetecting = false;
+    
+    // Hide the gesture status initially
+    if (gestureStatus) {
+        gestureStatus.classList.remove('visible');
+    }
+    
+    // Detection toggle button functionality
+    if (detectionToggle) {
+        detectionToggle.addEventListener('click', function() {
+            // Toggle the detection state
+            isDetecting = !isDetecting;
+            
+            // Send toggle command to main process
+            window.api.send('toggle-detection', isDetecting);
+            
+            // Update the button state (will be fully updated when we get a response)
+            this.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
+            this.classList.toggle('detecting', isDetecting);
+        });
+    }
+    
+    // Handle detection status updates from main process
+    window.api.receive('detection-status', (data) => {
+        console.log('Detection status update:', data);
+        
+        // Update the detection state
+        isDetecting = data.detecting;
+        
+        // Update the button
+        if (detectionToggle) {
+            detectionToggle.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
+            detectionToggle.classList.toggle('detecting', isDetecting);
+        }
+        
+        // Show status message on error
+        if (!data.success) {
+            alert('There was an error ' + (isDetecting ? 'starting' : 'stopping') + ' gesture detection.');
+        }
+    });
+    
+    // Handle detected gestures from main process
+    window.api.receive('gesture-detected', (data) => {
+        console.log('Gesture detected:', data);
+        
+        // Update the status display
+        if (detectedGesture && gestureStatus) {
+            // Set the gesture name and emoji
+            detectedGesture.textContent = `${data.gesture} ${data.gestureEmoji}`;
+            
+            // Show the status
+            gestureStatus.classList.add('visible');
+            
+            // Hide after a delay
+            setTimeout(() => {
+                gestureStatus.classList.remove('visible');
+            }, 2000);
+        }
+        
+        // Handle matching mappings
+        if (data.matchingMappings && data.matchingMappings.length > 0) {
+            data.matchingMappings.forEach(mapping => {
+                console.log(`Matching mapping found: ${mapping.name} - macro: ${mapping.macro}`);
+                // In the future, this is where we'll execute the macro
+            });
+        }
+    });
     
     // Load saved mappings
     window.api.send('load-mappings');

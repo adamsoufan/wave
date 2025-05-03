@@ -14,7 +14,8 @@ contextBridge.exposeInMainWorld('api', {
       'load-macros',
       'load-mappings',
       'delete-macro',
-      'delete-mapping'
+      'delete-mapping',
+      'toggle-detection'
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
@@ -26,7 +27,9 @@ contextBridge.exposeInMainWorld('api', {
     const validChannels = [
       'message-from-main', 
       'macros-loaded', 
-      'mappings-loaded'
+      'mappings-loaded',
+      'gesture-detected',
+      'detection-status'
     ];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender` 
@@ -39,7 +42,9 @@ contextBridge.exposeInMainWorld('api', {
     const validChannels = [
       'message-from-main', 
       'macros-loaded', 
-      'mappings-loaded'
+      'mappings-loaded',
+      'gesture-detected',
+      'detection-status'
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.removeListener(channel, func);
