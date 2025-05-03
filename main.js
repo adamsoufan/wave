@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -12,6 +12,7 @@ const net = require('net');
 let mainWindow;
 let macros = [];
 let mappings = [];
+let tray = null;
 
 // Detector process variables
 let detectorProcess = null;
@@ -77,6 +78,11 @@ const createWindow = () => {
   if (process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
   }
+  
+  // When main window is closed, don't stop detection - just set the reference to null
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 };
 
 // Function to start the socket server
@@ -86,59 +92,84 @@ const startSocketServer = () => {
     return;
   }
   
-  // Create the socket server
-  socketServer = net.createServer((socket) => {
-    console.log('Python detector connected to socket server');
-    
-    let buffer = '';
-    
-    // Handle data received from the detector
-    socket.on('data', (data) => {
-      // Convert buffer to string and append to existing buffer
-      buffer += data.toString();
+  try {
+    // Create the socket server
+    socketServer = net.createServer((socket) => {
+      console.log('Python detector connected to socket server');
       
-      // Process complete JSON messages
-      const messages = buffer.split('\n');
-      buffer = messages.pop(); // Keep the last potentially incomplete message
+      let buffer = '';
       
-      messages.forEach(message => {
-        if (message.trim()) {
-          try {
-            const parsedData = JSON.parse(message);
-            if (parsedData.gesture) {
-              handleDetectedGesture(parsedData.gesture);
+      // Handle data received from the detector
+      socket.on('data', (data) => {
+        // Convert buffer to string and append to existing buffer
+        buffer += data.toString();
+        
+        // Process complete JSON messages
+        const messages = buffer.split('\n');
+        buffer = messages.pop(); // Keep the last potentially incomplete message
+        
+        messages.forEach(message => {
+          if (message.trim()) {
+            try {
+              const parsedData = JSON.parse(message);
+              if (parsedData.gesture) {
+                handleDetectedGesture(parsedData.gesture);
+              }
+            } catch (error) {
+              console.error('Error parsing JSON from detector:', error);
             }
-          } catch (error) {
-            console.error('Error parsing JSON from detector:', error);
           }
-        }
+        });
+      });
+      
+      // Handle socket closure
+      socket.on('close', () => {
+        console.log('Python detector disconnected from socket server');
+      });
+      
+      // Handle socket errors
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
       });
     });
     
-    // Handle socket closure
-    socket.on('close', () => {
-      console.log('Python detector disconnected from socket server');
+    // Start listening on the specified port
+    socketServer.listen(SOCKET_PORT, () => {
+      console.log(`Socket server listening on port ${SOCKET_PORT}`);
     });
     
-    // Handle socket errors
-    socket.on('error', (error) => {
-      console.error('Socket error:', error);
+    // Handle server errors
+    socketServer.on('error', (error) => {
+      console.error('Socket server error:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${SOCKET_PORT} is already in use`);
+        // Try to close any existing instance and restart
+        try {
+          const tempServer = net.createServer();
+          tempServer.on('error', () => {
+            // Port is in use and not accessible
+            console.error(`Port ${SOCKET_PORT} is in use and cannot be released`);
+          });
+          
+          tempServer.listen(SOCKET_PORT, () => {
+            tempServer.close();
+            console.log(`Port ${SOCKET_PORT} was in use but has been released`);
+            // Try starting again after a short delay
+            setTimeout(() => startSocketServer(), 1000);
+          });
+        } catch (err) {
+          console.error('Failed to release port:', err);
+        }
+      }
+      socketServer = null;
     });
-  });
-  
-  // Start listening on the specified port
-  socketServer.listen(SOCKET_PORT, () => {
-    console.log(`Socket server listening on port ${SOCKET_PORT}`);
-  });
-  
-  // Handle server errors
-  socketServer.on('error', (error) => {
-    console.error('Socket server error:', error);
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${SOCKET_PORT} is already in use`);
-    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to start socket server:', error);
     socketServer = null;
-  });
+    return false;
+  }
 };
 
 // Function to stop the socket server
@@ -161,27 +192,36 @@ const startGestureDetection = () => {
   
   try {
     // Start the socket server first
-    startSocketServer();
+    if (!startSocketServer()) {
+      console.error('Failed to start socket server');
+      return false;
+    }
     
     // Get the path to the detector script
-    const detectorScriptPath = path.join(__dirname, 'gesture-detection', 'Detector.py');
-    const detectorModelPath = path.join(__dirname, 'gesture-detection', 'hand_gesture_knn_model.pkl');
+    const detectorDir = path.join(__dirname, 'gesture-detection');
+    const detectorScriptPath = path.join(detectorDir, 'Detector.py');
     
-    // Spawn the Python process
-    detectorProcess = spawn('python', [detectorScriptPath]);
+    console.log(`Starting detector from: ${detectorScriptPath}`);
+    
+    // Spawn the Python process with working directory set to the detection folder
+    detectorProcess = spawn('python', [detectorScriptPath], {
+      cwd: detectorDir
+    });
     
     isDetecting = true;
+    
+    // Update tray menu to reflect new state
+    updateTrayMenu();
     
     // Handle process output
     detectorProcess.stdout.on('data', (data) => {
       const output = data.toString().trim();
+      console.log(`Detector output: ${output}`);
       
       // Look for gesture detection messages
       if (output.includes('[GESTURE]')) {
         const gesture = output.split('[GESTURE]')[1].trim();
         handleDetectedGesture(gesture);
-      } else {
-        console.log(`Detector output: ${output}`);
       }
     });
     
@@ -199,7 +239,10 @@ const startGestureDetection = () => {
       // Stop the socket server when the detector is stopped
       stopSocketServer();
       
-      // Notify renderer that detection has stopped
+      // Update tray menu
+      updateTrayMenu();
+      
+      // Notify renderer that detection has stopped (if window exists)
       if (mainWindow) {
         mainWindow.webContents.send('detection-status', { detecting: false });
       }
@@ -229,6 +272,9 @@ const stopGestureDetection = () => {
     
     // Stop the socket server
     stopSocketServer();
+    
+    // Update tray menu
+    updateTrayMenu();
     
     return true;
   } catch (error) {
@@ -260,6 +306,17 @@ const handleDetectedGesture = (gesture) => {
   if (matchingMappings.length > 0) {
     console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings);
     
+    // Show a notification for the first matching mapping
+    if (!mainWindow || !mainWindow.isFocused()) {
+      // Only show notification if the window is not focused or doesn't exist
+      const mapping = matchingMappings[0];
+      new Notification({
+        title: 'Gesture Detected',
+        body: `Detected "${gesture}" (${gestureEmoji}) - Macro: ${mapping.name}`,
+        silent: true // Don't play a sound to avoid annoyance with frequent detections
+      }).show();
+    }
+    
     // Send the matching mappings to the renderer
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
@@ -289,7 +346,11 @@ app.whenReady().then(() => {
   macros = loadDataFromFile(macrosPath, []);
   mappings = loadDataFromFile(mappingsPath, []);
   
+  // Create the main window
   createWindow();
+  
+  // Create the tray icon
+  createTray();
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
@@ -302,14 +363,9 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
-  // Stop gesture detection if running
-  if (isDetecting && detectorProcess) {
-    stopGestureDetection();
-  }
-  
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Don't quit the app when all windows are closed
+  // We want it to keep running in the background for gesture detection
+  console.log('All windows closed, app still running in background for gesture detection');
 });
 
 // Clean up processes on app quit
@@ -338,6 +394,9 @@ ipcMain.on('toggle-detection', (event, shouldDetect) => {
   } else {
     success = stopGestureDetection();
   }
+  
+  // Update the tray menu
+  updateTrayMenu();
   
   // Send status back to renderer
   event.reply('detection-status', { 
@@ -456,4 +515,137 @@ ipcMain.on('delete-mapping', (event, mappingName) => {
     // Reply with updated mappings list
     event.reply('mappings-loaded', mappings);
   }
-}); 
+});
+
+// Handle requests for the current detection state
+ipcMain.on('get-detection-state', (event) => {
+  event.reply('detection-state', { detecting: isDetecting });
+});
+
+// Function to create the tray icon
+const createTray = () => {
+  try {
+    // Create a simple icon programmatically
+    const icon = nativeImage.createEmpty();
+    // Use 16x16 size for tray (standard tray icon size)
+    const size = { width: 16, height: 16 };
+    
+    // Try to use app icon if it exists
+    let iconPath = null;
+    if (process.platform === 'darwin') {
+      // macOS app icon
+      iconPath = path.join(__dirname, 'build', 'icon.icns');
+    } else if (process.platform === 'win32') {
+      // Windows app icon
+      iconPath = path.join(__dirname, 'build', 'icon.ico');
+    } else {
+      // Linux app icon
+      iconPath = path.join(__dirname, 'build', 'icon.png');
+    }
+    
+    // Create tray with available icon or empty icon
+    if (iconPath && fs.existsSync(iconPath)) {
+      tray = new Tray(iconPath);
+    } else {
+      // Use empty icon as fallback
+      tray = new Tray(icon);
+    }
+    
+    const contextMenu = Menu.buildFromTemplate([
+      { 
+        label: 'Open Wave App', 
+        click: () => {
+          if (!mainWindow) {
+            createWindow();
+          } else {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        } 
+      },
+      { 
+        label: isDetecting ? 'Stop Gesture Detection' : 'Start Gesture Detection',
+        click: () => {
+          if (isDetecting) {
+            stopGestureDetection();
+          } else {
+            startGestureDetection();
+          }
+          // Update the menu item after toggling
+          updateTrayMenu();
+        }
+      },
+      { type: 'separator' },
+      { 
+        label: 'Exit', 
+        click: () => {
+          // Stop gesture detection before exiting
+          if (isDetecting && detectorProcess) {
+            stopGestureDetection();
+          }
+          app.quit();
+        } 
+      }
+    ]);
+    
+    tray.setToolTip('Wave Gesture App');
+    tray.setContextMenu(contextMenu);
+    
+    // Double-click on the tray icon opens the app
+    tray.on('double-click', () => {
+      if (!mainWindow) {
+        createWindow();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  } catch (error) {
+    console.error('Error creating tray icon:', error);
+    // If we can't create a tray icon, still allow the app to run
+  }
+};
+
+// Function to update the tray menu (e.g., when detection status changes)
+const updateTrayMenu = () => {
+  if (!tray) return;
+  
+  const contextMenu = Menu.buildFromTemplate([
+    { 
+      label: 'Open Wave App', 
+      click: () => {
+        if (!mainWindow) {
+          createWindow();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      } 
+    },
+    { 
+      label: isDetecting ? 'Stop Gesture Detection' : 'Start Gesture Detection',
+      click: () => {
+        if (isDetecting) {
+          stopGestureDetection();
+        } else {
+          startGestureDetection();
+        }
+        // Update the menu again after toggling
+        updateTrayMenu();
+      }
+    },
+    { type: 'separator' },
+    { 
+      label: 'Exit', 
+      click: () => {
+        // Stop gesture detection before exiting
+        if (isDetecting && detectorProcess) {
+          stopGestureDetection();
+        }
+        app.quit();
+      } 
+    }
+  ]);
+  
+  tray.setContextMenu(contextMenu);
+}; 

@@ -72,6 +72,22 @@ function setupGesturesPage() {
         gestureStatus.classList.remove('visible');
     }
     
+    // Request current detection state when page loads
+    window.api.send('get-detection-state');
+    
+    // Handle detection state response
+    window.api.receive('detection-state', (data) => {
+        console.log('Received detection state:', data);
+        // Update the local state
+        isDetecting = data.detecting;
+        
+        // Update the button
+        if (detectionToggle) {
+            detectionToggle.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
+            detectionToggle.classList.toggle('detecting', isDetecting);
+        }
+    });
+    
     // Detection toggle button functionality
     if (detectionToggle) {
         detectionToggle.addEventListener('click', function() {
