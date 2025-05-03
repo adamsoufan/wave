@@ -284,6 +284,12 @@
     font-size: 40px;
 }
 
+.gesture-name {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #666;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
     .gesture-hub-container {

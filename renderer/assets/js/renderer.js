@@ -128,8 +128,8 @@ function setupGesturesPage() {
         
         // Update the status display
         if (detectedGesture && gestureStatus) {
-            // Set the gesture name and emoji
-            detectedGesture.textContent = `${data.gesture} ${data.gestureEmoji}`;
+            // Set the gesture name and emoji - for display only
+            detectedGesture.textContent = `${data.gestureName} ${data.gestureEmoji}`;
             
             // Show the status
             gestureStatus.classList.add('visible');
@@ -318,9 +318,14 @@ function setupMappingHub() {
                 if (mapping.leftGesture) {
                     plusIcon.textContent = mapping.leftGesture;
                     plusIcon.classList.add('selected-gesture');
+                    // Add the gesture ID
+                    if (mapping.leftGestureId) {
+                        plusIcon.setAttribute('data-gesture-id', mapping.leftGestureId);
+                    }
                 } else {
                     plusIcon.textContent = '+';
                     plusIcon.classList.remove('selected-gesture');
+                    plusIcon.removeAttribute('data-gesture-id');
                 }
             }
         }
@@ -331,9 +336,14 @@ function setupMappingHub() {
                 if (mapping.rightGesture) {
                     plusIcon.textContent = mapping.rightGesture;
                     plusIcon.classList.add('selected-gesture');
+                    // Add the gesture ID
+                    if (mapping.rightGestureId) {
+                        plusIcon.setAttribute('data-gesture-id', mapping.rightGestureId);
+                    }
                 } else {
                     plusIcon.textContent = '+';
                     plusIcon.classList.remove('selected-gesture');
+                    plusIcon.removeAttribute('data-gesture-id');
                 }
             }
         }
@@ -342,12 +352,29 @@ function setupMappingHub() {
         const previewCircle = document.querySelector('.gesture-preview-circle');
         if (previewCircle) {
             // Use any selected gesture for the preview, prioritize right hand
-            if (mapping.rightGesture) {
+            if (mapping.previewEmoji) {
+                previewCircle.textContent = mapping.previewEmoji;
+                // Add the gesture ID if available
+                if (mapping.previewGestureId) {
+                    previewCircle.setAttribute('data-gesture-id', mapping.previewGestureId);
+                } else if (mapping.rightGestureId) {
+                    previewCircle.setAttribute('data-gesture-id', mapping.rightGestureId);
+                } else if (mapping.leftGestureId) {
+                    previewCircle.setAttribute('data-gesture-id', mapping.leftGestureId);
+                }
+            } else if (mapping.rightGesture) {
                 previewCircle.textContent = mapping.rightGesture;
+                if (mapping.rightGestureId) {
+                    previewCircle.setAttribute('data-gesture-id', mapping.rightGestureId);
+                }
             } else if (mapping.leftGesture) {
                 previewCircle.textContent = mapping.leftGesture;
+                if (mapping.leftGestureId) {
+                    previewCircle.setAttribute('data-gesture-id', mapping.leftGestureId);
+                }
             } else {
                 previewCircle.textContent = '👍'; // Default emoji
+                previewCircle.removeAttribute('data-gesture-id');
             }
         }
         
@@ -413,6 +440,7 @@ function setupMappingHub() {
             gestureIconItems.forEach(item => {
                 item.addEventListener('click', function() {
                     const emoji = this.querySelector('.gesture-emoji').textContent;
+                    const gestureId = this.getAttribute('data-gesture-id');
                     
                     if (activeGestureBlock) {
                         // Replace the plus icon with the selected emoji
@@ -420,6 +448,8 @@ function setupMappingHub() {
                         if (plusIcon) {
                             plusIcon.textContent = emoji;
                             plusIcon.classList.add('selected-gesture');
+                            // Store the gesture ID as a data attribute
+                            plusIcon.setAttribute('data-gesture-id', gestureId);
                         }
                     }
                     
@@ -427,6 +457,7 @@ function setupMappingHub() {
                     const previewCircle = document.querySelector('.gesture-preview-circle');
                     if (previewCircle) {
                         previewCircle.textContent = emoji;
+                        previewCircle.setAttribute('data-gesture-id', gestureId);
                     }
                     
                     // Close the popup
@@ -492,17 +523,20 @@ function setupMappingHub() {
                 return;
             }
             
-            // Get the gesture emojis
+            // Get the gesture emojis and IDs
             const leftBlock = document.querySelector('.gesture-block.left-hand');
             const rightBlock = document.querySelector('.gesture-block.right-hand');
             
             let leftGesture = null;
-            let rightGesture = null;
+            let leftGestureId = null;
+            let rightGesture = null; 
+            let rightGestureId = null;
             
             if (leftBlock) {
                 const plusIcon = leftBlock.querySelector('.gesture-plus-icon');
                 if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
                     leftGesture = plusIcon.textContent;
+                    leftGestureId = plusIcon.getAttribute('data-gesture-id');
                 }
             }
             
@@ -510,6 +544,7 @@ function setupMappingHub() {
                 const plusIcon = rightBlock.querySelector('.gesture-plus-icon');
                 if (plusIcon && plusIcon.classList.contains('selected-gesture')) {
                     rightGesture = plusIcon.textContent;
+                    rightGestureId = plusIcon.getAttribute('data-gesture-id');
                 }
             }
             
@@ -520,15 +555,20 @@ function setupMappingHub() {
             }
             
             // Get preview emoji for display
-            const previewEmoji = document.querySelector('.gesture-preview-circle').textContent;
+            const previewCircle = document.querySelector('.gesture-preview-circle');
+            const previewEmoji = previewCircle.textContent;
+            const previewGestureId = previewCircle.getAttribute('data-gesture-id');
             
             // Send mapping data to main process
             window.api.send('save-gesture-mapping', {
                 name: mappingName,
                 macro: selectedMacro,
                 leftGesture: leftGesture,
+                leftGestureId: leftGestureId,
                 rightGesture: rightGesture,
+                rightGestureId: rightGestureId,
                 previewEmoji: previewEmoji,
+                previewGestureId: previewGestureId,
                 enabled: true // New mappings are enabled by default
             });
             

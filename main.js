@@ -22,12 +22,24 @@ let socketServer = null;
 // Socket server port
 const SOCKET_PORT = 5050;
 
-// Gesture mappings
-// Map the detector's output gestures to emoji representations used in the UI
-const gestureToEmojiMap = {
-  'open_hand': '✋',
-  'fist': '✊',
-  'thumbs_up': '👍'
+
+
+// Define gesture IDs for internal use
+const gestureData = {
+  'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
+  'fist': { id: 'fist', emoji: '✊', name: 'Fist' },
+  'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' }
+};
+
+// Map emoji representations back to gesture IDs (for UI → internal conversion)
+const emojiToGestureIdMap = {
+  '✋': 'open_hand',
+  '✊': 'fist', 
+  '👍': 'thumbs_up',
+  // Provide mappings for other emojis in the UI
+  '👋': 'wave',
+  '✌️': 'peace',
+  '👌': 'ok'
 };
 
 // Paths for storing macros and mappings data
@@ -287,20 +299,26 @@ const stopGestureDetection = () => {
 const handleDetectedGesture = (gesture) => {
   console.log(`Detected gesture: ${gesture}`);
   
-  // Convert gesture name to emoji representation
-  const gestureEmoji = gestureToEmojiMap[gesture] || null;
+  // Get gesture data (includes emoji for display purposes only)
+  const gestureInfo = gestureData[gesture] || null;
   
-  if (!gestureEmoji) {
-    console.log(`No emoji mapping for gesture: ${gesture}`);
+  if (!gestureInfo) {
+    console.log(`No gesture mapping for: ${gesture}`);
     return;
   }
   
-  console.log(`Gesture emoji: ${gestureEmoji}`);
+  // For UI display - the emoji is only for visualization
+  const gestureEmoji = gestureInfo.emoji;
   
-  // Find matching mappings that are enabled
+  console.log(`Gesture info:`, gestureInfo);
+  console.log(`Current mappings:`, mappings);
+  
+  // Find matching mappings that are enabled - match on gesture ID only
   const matchingMappings = mappings.filter(mapping => 
-    mapping.enabled && 
-    (mapping.leftGesture === gestureEmoji || mapping.rightGesture === gestureEmoji)
+    mapping.enabled && (
+      mapping.leftGestureId === gesture || 
+      mapping.rightGestureId === gesture
+    )
   );
   
   if (matchingMappings.length > 0) {
@@ -312,7 +330,7 @@ const handleDetectedGesture = (gesture) => {
       const mapping = matchingMappings[0];
       new Notification({
         title: 'Gesture Detected',
-        body: `Detected "${gesture}" (${gestureEmoji}) - Macro: ${mapping.name}`,
+        body: `Detected "${gestureInfo.name}" ${gestureEmoji} - Macro: ${mapping.name}`,
         silent: true // Don't play a sound to avoid annoyance with frequent detections
       }).show();
     }
@@ -320,19 +338,21 @@ const handleDetectedGesture = (gesture) => {
     // Send the matching mappings to the renderer
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
-        gesture,
+        gestureId: gesture,
         gestureEmoji,
+        gestureName: gestureInfo.name,
         matchingMappings
       });
     }
   } else {
-    console.log(`No matching mappings found for gesture: ${gesture} (${gestureEmoji})`);
+    console.log(`No matching mappings found for gesture: ${gesture}`);
     
     // Send the detected gesture to the renderer anyway (for status display)
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
-        gesture,
+        gestureId: gesture,
         gestureEmoji,
+        gestureName: gestureInfo.name,
         matchingMappings: []
       });
     }
@@ -427,15 +447,35 @@ ipcMain.on('save-macro', (event, macro) => {
 
 // Save gesture mapping
 ipcMain.on('save-gesture-mapping', (event, mapping) => {
+  // Convert emoji to gesture ID for internal storage
+  let leftGestureId = null;
+  let rightGestureId = null;
+  
+  // Add emoji to ID conversion
+  if (mapping.leftGesture) {
+    leftGestureId = emojiToGestureIdMap[mapping.leftGesture] || null;
+  }
+  
+  if (mapping.rightGesture) {
+    rightGestureId = emojiToGestureIdMap[mapping.rightGesture] || null;
+  }
+  
+  // Store both emoji (for display) and ID (for matching)
+  const processedMapping = {
+    ...mapping,
+    leftGestureId,
+    rightGestureId
+  };
+  
   // Check if mapping already exists
   const existingIndex = mappings.findIndex(m => m.name === mapping.name);
   
   if (existingIndex !== -1) {
     // Update existing mapping
-    mappings[existingIndex] = mapping;
+    mappings[existingIndex] = processedMapping;
   } else {
     // Add new mapping
-    mappings.push(mapping);
+    mappings.push(processedMapping);
   }
   
   // Save to file
