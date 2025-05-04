@@ -144,7 +144,7 @@ function setupGesturesPage() {
         if (data.matchingMappings && data.matchingMappings.length > 0) {
             data.matchingMappings.forEach(mapping => {
                 console.log(`Matching mapping found: ${mapping.name} - macro: ${mapping.macro}`);
-                // In the future, this is where we'll execute the macro
+                // The main process now handles the macro execution
             });
         }
     });
@@ -667,6 +667,32 @@ function setupMacroHub() {
             });
         }
         
+        // Add an execute button if it doesn't exist
+        let executeButton = document.querySelector('.execute-macro-button');
+        if (!executeButton) {
+            executeButton = document.createElement('button');
+            executeButton.classList.add('execute-macro-button');
+            executeButton.textContent = 'Test';
+            executeButton.style.marginLeft = '10px';
+            executeButton.style.backgroundColor = '#4CAF50';
+            
+            // Insert after the delete button or save button
+            if (deleteButton) {
+                deleteButton.parentNode.insertBefore(executeButton, deleteButton.nextSibling);
+            } else {
+                saveButton.parentNode.insertBefore(executeButton, saveButton.nextSibling);
+            }
+            
+            // Add click handler for the execute button
+            executeButton.addEventListener('click', function() {
+                const macroName = macroNameInput.value;
+                if (macroName) {
+                    // Send the execute command to the main process
+                    window.api.send('execute-macro', macroName);
+                }
+            });
+        }
+        
         // Clear the action list
         actionList.innerHTML = '';
         
@@ -820,6 +846,26 @@ function setupMacroHub() {
             });
         });
     }
+
+    // Handle macro execution confirmation
+    window.api.receive('macro-executed', (data) => {
+        console.log('Macro executed:', data);
+        if (data.success) {
+            // Show a brief success message or indicator
+            const executeButton = document.querySelector('.execute-macro-button');
+            if (executeButton) {
+                const originalText = executeButton.textContent;
+                executeButton.textContent = 'Done!';
+                executeButton.style.backgroundColor = '#2E7D32';
+                
+                // Restore original text after a delay
+                setTimeout(() => {
+                    executeButton.textContent = originalText;
+                    executeButton.style.backgroundColor = '#4CAF50';
+                }, 1500);
+            }
+        }
+    });
 }
 
 // Initialize drag-and-drop functionality for action items

@@ -23,12 +23,26 @@ let socketServer = null;
 // Socket server port
 const SOCKET_PORT = 5050;
 
+// Gesture detection configuration
+const gestureConfig = {
+  cooldownPeriod: 1000, // milliseconds between detecting the same gesture again (doesn't affect different gestures)
+  continuousDetection: true, // Whether to continuously detect the same gesture when held
+  gestureTimeout: 500     // Time in ms after which a gesture is considered gone if not seen
+};
+
 // Define gesture IDs for internal use
 const gestureData = {
   'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
   'fist': { id: 'fist', emoji: '✊', name: 'Fist' },
   'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' }
 };
+
+// Track when each gesture was last detected to implement cooldown
+const lastGestureTime = {};
+
+// Track currently active gestures and when they were last seen
+const activeGestures = new Map(); // Maps gesture ID to last seen timestamp
+let gestureCheckTimer = null;
 
 // Map emoji representations back to gesture IDs (for UI → internal conversion)
 const emojiToGestureIdMap = {
@@ -119,11 +133,17 @@ const startSocketServer = () => {
         const messages = buffer.split('\n');
         buffer = messages.pop(); // Keep the last potentially incomplete message
         
+        // Track detected gestures in this batch
+        const detectedGestures = [];
+        
         messages.forEach(message => {
           if (message.trim()) {
             try {
               const parsedData = JSON.parse(message);
               if (parsedData.gesture) {
+                // Add to the list of currently detected gestures
+                detectedGestures.push(parsedData.gesture);
+                // Process the gesture
                 handleDetectedGesture(parsedData.gesture);
               }
             } catch (error) {
@@ -131,11 +151,24 @@ const startSocketServer = () => {
             }
           }
         });
+        
+        // If we got any gestures in this batch, update the active gestures
+        if (detectedGestures.length > 0) {
+          updateActiveGestures(detectedGestures);
+        }
       });
       
       // Handle socket closure
       socket.on('close', () => {
         console.log('Python detector disconnected from socket server');
+        // Clear active gestures when connection closes
+        activeGestures.clear();
+        
+        // Stop all timers
+        if (gestureCheckTimer) {
+          clearInterval(gestureCheckTimer);
+          gestureCheckTimer = null;
+        }
       });
       
       // Handle socket errors
@@ -202,6 +235,15 @@ const startGestureDetection = () => {
   }
   
   try {
+    // Reset gesture detection state
+    Object.keys(lastGestureTime).forEach(key => delete lastGestureTime[key]);
+    activeGestures.clear();
+    
+    if (gestureCheckTimer) {
+      clearInterval(gestureCheckTimer);
+      gestureCheckTimer = null;
+    }
+    
     // Start the socket server first
     if (!startSocketServer()) {
       console.error('Failed to start socket server');
@@ -229,10 +271,19 @@ const startGestureDetection = () => {
       const output = data.toString().trim();
       console.log(`Detector output: ${output}`);
       
+      // Track detected gestures in this batch
+      const detectedGestures = [];
+      
       // Look for gesture detection messages
       if (output.includes('[GESTURE]')) {
         const gesture = output.split('[GESTURE]')[1].trim();
+        detectedGestures.push(gesture);
         handleDetectedGesture(gesture);
+      }
+      
+      // If we got any gestures in this batch, update the active gestures
+      if (detectedGestures.length > 0) {
+        updateActiveGestures(detectedGestures);
       }
     });
     
@@ -276,6 +327,15 @@ const stopGestureDetection = () => {
   }
   
   try {
+    // Reset gesture detection state
+    Object.keys(lastGestureTime).forEach(key => delete lastGestureTime[key]);
+    activeGestures.clear();
+    
+    if (gestureCheckTimer) {
+      clearInterval(gestureCheckTimer);
+      gestureCheckTimer = null;
+    }
+    
     // Kill the detector process
     detectorProcess.kill();
     isDetecting = false;
@@ -298,6 +358,74 @@ const stopGestureDetection = () => {
 const handleDetectedGesture = (gesture) => {
   console.log(`Detected gesture: ${gesture}`);
   
+  // Get current time
+  const currentTime = Date.now();
+  
+  // Mark this gesture as active with the current timestamp
+  activeGestures.set(gesture, currentTime);
+  
+  // Check if this is the same gesture as before and if it's within the cooldown period
+  const lastTime = lastGestureTime[gesture] || 0;
+  const timeSinceLastGesture = currentTime - lastTime;
+  
+  // If the same gesture was detected less than the cooldown period, ignore it
+  // This is a safety check in case the Python detector sends rapid events
+  if (timeSinceLastGesture < gestureConfig.cooldownPeriod) {
+    console.log(`Ignoring repeated gesture ${gesture}: only ${timeSinceLastGesture}ms since last detection (cooldown: ${gestureConfig.cooldownPeriod}ms)`);
+    
+    // Start the gesture check timer if not already running
+    ensureGestureCheckTimer();
+    
+    return;
+  }
+  
+  // Update the last detection time for this gesture
+  lastGestureTime[gesture] = currentTime;
+  
+  // Start the gesture check timer if not already running
+  ensureGestureCheckTimer();
+  
+  // Process the gesture
+  processGesture(gesture);
+};
+
+// Ensure the gesture check timer is running
+const ensureGestureCheckTimer = () => {
+  if (!gestureCheckTimer) {
+    gestureCheckTimer = setInterval(() => {
+      checkActiveGestures();
+    }, gestureConfig.gestureTimeout);
+  }
+};
+
+// Function to check and clean up active gestures that haven't been seen recently
+const checkActiveGestures = () => {
+  const currentTime = Date.now();
+  
+  // Check each active gesture
+  activeGestures.forEach((lastSeenTime, gesture) => {
+    const timeSinceLastSeen = currentTime - lastSeenTime;
+    
+    // If we haven't seen this gesture for a while, remove it
+    if (timeSinceLastSeen > gestureConfig.gestureTimeout) {
+      console.log(`Gesture ${gesture} no longer detected (not seen for ${timeSinceLastSeen}ms)`);
+      activeGestures.delete(gesture);
+    }
+  });
+  
+  // If there are no active gestures, stop the timer
+  if (activeGestures.size === 0) {
+    console.log('No active gestures - stopping gesture check timer');
+    
+    if (gestureCheckTimer) {
+      clearInterval(gestureCheckTimer);
+      gestureCheckTimer = null;
+    }
+  }
+};
+
+// Function to process a gesture (separated from detection logic)
+const processGesture = (gesture) => {
   // Get gesture data (includes emoji for display purposes only)
   const gestureInfo = gestureData[gesture] || null;
   
@@ -309,6 +437,7 @@ const handleDetectedGesture = (gesture) => {
   // For UI display - the emoji is only for visualization
   const gestureEmoji = gestureInfo.emoji;
   
+  console.log(`Processing gesture: ${gesture}`);
   console.log(`Gesture info:`, gestureInfo);
   console.log(`Checking ${mappings.length} mappings for matches with gesture: ${gesture}`);
   
@@ -359,6 +488,12 @@ const handleDetectedGesture = (gesture) => {
       }).show();
     }
     
+    // Execute the macro for the first matching mapping
+    const macroName = matchingMappings[0].macro;
+    if (macroName) {
+      executeMacro(macroName);
+    }
+    
     // Send the matching mappings to the renderer
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
@@ -380,6 +515,107 @@ const handleDetectedGesture = (gesture) => {
         matchingMappings: []
       });
     }
+  }
+};
+
+// Function to execute a macro by name
+const executeMacro = (macroName) => {
+  console.log(`Executing macro: ${macroName}`);
+  
+  // Find the macro by name
+  const macro = macros.find(m => m.name === macroName);
+  
+  if (!macro) {
+    console.error(`Macro not found: ${macroName}`);
+    return;
+  }
+  
+  // Execute each action in the macro
+  if (macro.actions && macro.actions.length > 0) {
+    macro.actions.forEach((action, index) => {
+      // Add a slight delay between actions
+      setTimeout(() => {
+        executeAction(action);
+      }, index * 500); // 500ms delay between actions
+    });
+  }
+};
+
+// Function to execute a single action
+const executeAction = (action) => {
+  console.log(`Executing action: ${action.type}`, action.value);
+  
+  switch (action.type) {
+    case 'keypress':
+      executeKeyPress(action.value);
+      break;
+    case 'command':
+      // Command execution code would go here
+      console.log('Command execution not implemented yet');
+      break;
+    case 'script':
+      // Script execution code would go here
+      console.log('Script execution not implemented yet');
+      break;
+    default:
+      console.error(`Unknown action type: ${action.type}`);
+  }
+};
+
+// Function to execute a key press action
+const executeKeyPress = (keyCombo) => {
+  if (!keyCombo) {
+    console.error('No key combination provided');
+    return;
+  }
+  
+  console.log(`Executing key press: ${keyCombo}`);
+  
+  // Parse the key combination (e.g., "Ctrl + Alt + T")
+  const keys = keyCombo.split(' + ').map(k => k.trim());
+  
+  // Map the keys to robotjs format
+  const modifiers = [];
+  let key = null;
+  
+  keys.forEach(k => {
+    // Convert key names to robotjs format
+    const lowerKey = k.toLowerCase();
+    
+    // Handle modifier keys
+    if (lowerKey === 'ctrl' || lowerKey === 'control') {
+      modifiers.push('control');
+    } else if (lowerKey === 'alt') {
+      modifiers.push('alt');
+    } else if (lowerKey === 'shift') {
+      modifiers.push('shift');
+    } else if (lowerKey === 'meta' || lowerKey === 'command' || lowerKey === 'cmd' || lowerKey === 'win') {
+      modifiers.push('command');
+    } else {
+      // Handle special keys
+      if (k === '↑') key = 'up';
+      else if (k === '↓') key = 'down';
+      else if (k === '←') key = 'left';
+      else if (k === '→') key = 'right';
+      else if (lowerKey === 'esc') key = 'escape';
+      else if (lowerKey === 'space') key = 'space';
+      else if (lowerKey === 'tab') key = 'tab';
+      else if (lowerKey === 'enter') key = 'enter';
+      else if (lowerKey === 'backspace') key = 'backspace';
+      else key = lowerKey; // For regular keys, use lowercase
+    }
+  });
+  
+  // Execute the key combination using robotjs
+  try {
+    if (key) {
+      robot.keyTap(key, modifiers);
+      console.log(`Pressed: ${key} with modifiers: ${modifiers.join(', ')}`);
+    } else {
+      console.error('No main key found in combination');
+    }
+  } catch (error) {
+    console.error('Error executing key press:', error);
   }
 };
 
@@ -577,6 +813,20 @@ ipcMain.on('delete-macro', (event, macroName) => {
   }
 });
 
+// Execute macro manually
+ipcMain.on('execute-macro', (event, macroName) => {
+  console.log(`Manual macro execution request: ${macroName}`);
+  
+  // Execute the macro
+  executeMacro(macroName);
+  
+  // Reply with success status
+  event.reply('macro-executed', { 
+    success: true, 
+    macroName 
+  });
+});
+
 // Delete mapping
 ipcMain.on('delete-mapping', (event, mappingName) => {
   // Find the mapping
@@ -597,6 +847,42 @@ ipcMain.on('delete-mapping', (event, mappingName) => {
 // Handle requests for the current detection state
 ipcMain.on('get-detection-state', (event) => {
   event.reply('detection-state', { detecting: isDetecting });
+});
+
+// Update gesture configuration
+ipcMain.on('update-gesture-config', (event, config) => {
+  if (config) {
+    // Update cooldown period if provided
+    if (typeof config.cooldownPeriod === 'number') {
+      // Ensure the cooldown is not too small (avoid rapid repeated detections)
+      gestureConfig.cooldownPeriod = Math.max(100, config.cooldownPeriod);
+      console.log(`Updated gesture cooldown period to ${gestureConfig.cooldownPeriod}ms`);
+    }
+    
+    // Update continuous detection if provided
+    if (typeof config.continuousDetection === 'boolean') {
+      gestureConfig.continuousDetection = config.continuousDetection;
+      console.log(`${gestureConfig.continuousDetection ? 'Enabled' : 'Disabled'} continuous gesture detection`);
+    }
+    
+    // Update gesture timeout if provided
+    if (typeof config.gestureTimeout === 'number') {
+      // Ensure timeout is not too small or too large
+      gestureConfig.gestureTimeout = Math.max(200, Math.min(2000, config.gestureTimeout));
+      console.log(`Updated gesture timeout to ${gestureConfig.gestureTimeout}ms`);
+      
+      // Restart the gesture check timer if running
+      if (gestureCheckTimer) {
+        clearInterval(gestureCheckTimer);
+        gestureCheckTimer = setInterval(() => {
+          checkActiveGestures();
+        }, gestureConfig.gestureTimeout);
+      }
+    }
+  }
+  
+  // Reply with the current config
+  event.reply('gesture-config-updated', { ...gestureConfig });
 });
 
 // Function to create the tray icon
@@ -784,4 +1070,20 @@ const validateMappings = () => {
   // Save the cleaned up mappings
   saveDataToFile(mappingsPath, mappings);
   console.log(`Validation complete. ${mappings.length} valid mappings retained.`);
-}; 
+};
+
+// Function to update the list of active gestures based on what's currently detected
+const updateActiveGestures = (detectedGestures) => {
+  // Get current time
+  const currentTime = Date.now();
+  
+  // Update timestamps for all detected gestures
+  detectedGestures.forEach(gesture => {
+    activeGestures.set(gesture, currentTime);
+  });
+  
+  // Make sure our timers are running as long as we have active gestures
+  if (activeGestures.size > 0) {
+    ensureGestureCheckTimer();
+  }
+};

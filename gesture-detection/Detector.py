@@ -96,9 +96,10 @@ try:
                     gesture_id = int(pred[0])
                     gesture    = GESTURE_LABELS.get(gesture_id, "unknown")
 
-                # Emit only non‑unknown gestures, debounced
+                # Emit only non‑unknown gestures, with cooldown
                 now = time.time()
-                if gesture != "unknown" and gesture != last_sent and (now - last_time) > COOLDOWN_SEC:
+                # Modified condition: Allow same gesture to be detected after cooldown
+                if gesture != "unknown" and ((now - last_time) > COOLDOWN_SEC):
                     last_sent, last_time = gesture, now
                     print(f"[GESTURE] {gesture}")  # stdout route
                     sock.sendall((json.dumps({"gesture": gesture}) + "\n").encode())
