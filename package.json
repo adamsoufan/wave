@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/adamsoufan/wave#readme",
   "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
     "electron": "^35.2.1",
     "electron-builder": "^24.13.3"
   },
@@ -64,5 +65,8 @@
         "AppImage"
       ]
     }
+  },
+  "dependencies": {
+    "robotjs": "^0.6.0"
   }
 }
