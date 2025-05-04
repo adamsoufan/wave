@@ -22,8 +22,6 @@ let socketServer = null;
 // Socket server port
 const SOCKET_PORT = 5050;
 
-
-
 // Define gesture IDs for internal use
 const gestureData = {
   'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
@@ -311,18 +309,43 @@ const handleDetectedGesture = (gesture) => {
   const gestureEmoji = gestureInfo.emoji;
   
   console.log(`Gesture info:`, gestureInfo);
-  console.log(`Current mappings:`, mappings);
+  console.log(`Checking ${mappings.length} mappings for matches with gesture: ${gesture}`);
   
-  // Find matching mappings that are enabled - match on gesture ID only
-  const matchingMappings = mappings.filter(mapping => 
-    mapping.enabled && (
-      mapping.leftGestureId === gesture || 
-      mapping.rightGestureId === gesture
-    )
-  );
+  // Find matching mappings that are enabled
+  const matchingMappings = mappings.filter(mapping => {
+    console.log(`\nChecking mapping: "${mapping.name}"`);
+    console.log(`  Left hand: ${mapping.leftGestureId || 'none'}, Right hand: ${mapping.rightGestureId || 'none'}, Enabled: ${mapping.enabled}`);
+    
+    if (!mapping.enabled) {
+      console.log(`  Skipping disabled mapping`);
+      return false;
+    }
+    
+    // Case 1: Only one hand gesture is defined in the mapping
+    if ((mapping.leftGestureId && !mapping.rightGestureId) || 
+        (!mapping.leftGestureId && mapping.rightGestureId)) {
+      // Match if the detected gesture matches either defined hand
+      const isMatch = mapping.leftGestureId === gesture || mapping.rightGestureId === gesture;
+      console.log(`  Single-hand mapping: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
+      return isMatch;
+    }
+    // Case 2: Both hands are defined in the mapping
+    // We can't tell if this is left or right hand from detector, so we'll 
+    // assume it's either-or for now. A future enhancement would be to use 
+    // the mediapipe data to determine which hand is which.
+    else if (mapping.leftGestureId && mapping.rightGestureId) {
+      // For now, we match if either hand matches the gesture
+      const isMatch = mapping.leftGestureId === gesture || mapping.rightGestureId === gesture;
+      console.log(`  Dual-hand mapping: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
+      return isMatch;
+    }
+    
+    console.log(`  No valid gesture IDs defined in mapping`);
+    return false;
+  });
   
   if (matchingMappings.length > 0) {
-    console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings);
+    console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings.map(m => m.name).join(', '));
     
     // Show a notification for the first matching mapping
     if (!mainWindow || !mainWindow.isFocused()) {
@@ -365,6 +388,9 @@ app.whenReady().then(() => {
   // Load saved macros and mappings
   macros = loadDataFromFile(macrosPath, []);
   mappings = loadDataFromFile(mappingsPath, []);
+  
+  // Validate and fix mappings
+  validateMappings();
   
   // Create the main window
   createWindow();
@@ -447,17 +473,23 @@ ipcMain.on('save-macro', (event, macro) => {
 
 // Save gesture mapping
 ipcMain.on('save-gesture-mapping', (event, mapping) => {
-  // Convert emoji to gesture ID for internal storage
-  let leftGestureId = null;
-  let rightGestureId = null;
+  console.log('Saving gesture mapping. Received data:', mapping);
+
+  // Use the leftGestureId and rightGestureId from the UI if available
+  let leftGestureId = mapping.leftGestureId || null;
+  let rightGestureId = mapping.rightGestureId || null;
+
+  console.log(`Initial gesture IDs - Left: ${leftGestureId}, Right: ${rightGestureId}`);
   
-  // Add emoji to ID conversion
-  if (mapping.leftGesture) {
+  // Only use emoji to ID conversion as a fallback when the IDs aren't directly provided
+  if (!leftGestureId && mapping.leftGesture) {
     leftGestureId = emojiToGestureIdMap[mapping.leftGesture] || null;
+    console.log(`Converted left gesture emoji ${mapping.leftGesture} to ID: ${leftGestureId}`);
   }
   
-  if (mapping.rightGesture) {
+  if (!rightGestureId && mapping.rightGesture) {
     rightGestureId = emojiToGestureIdMap[mapping.rightGesture] || null;
+    console.log(`Converted right gesture emoji ${mapping.rightGesture} to ID: ${rightGestureId}`);
   }
   
   // Store both emoji (for display) and ID (for matching)
@@ -467,15 +499,19 @@ ipcMain.on('save-gesture-mapping', (event, mapping) => {
     rightGestureId
   };
   
+  console.log('Processed mapping to save:', processedMapping);
+  
   // Check if mapping already exists
   const existingIndex = mappings.findIndex(m => m.name === mapping.name);
   
   if (existingIndex !== -1) {
     // Update existing mapping
     mappings[existingIndex] = processedMapping;
+    console.log(`Updated existing mapping at index ${existingIndex}`);
   } else {
     // Add new mapping
     mappings.push(processedMapping);
+    console.log('Added new mapping');
   }
   
   // Save to file
@@ -688,4 +724,63 @@ const updateTrayMenu = () => {
   ]);
   
   tray.setContextMenu(contextMenu);
+};
+
+// Function to validate and fix mappings
+const validateMappings = () => {
+  if (!mappings || !Array.isArray(mappings)) {
+    console.log('Mappings is not an array, initializing empty array');
+    mappings = [];
+    return;
+  }
+  
+  console.log(`Validating ${mappings.length} mappings`);
+  
+  // Filter out invalid mappings and fix any issues
+  mappings = mappings.filter(mapping => {
+    // Basic structure validation
+    if (!mapping || typeof mapping !== 'object') {
+      console.log('Removing invalid mapping (not an object)');
+      return false;
+    }
+    
+    if (!mapping.name || !mapping.macro) {
+      console.log(`Removing invalid mapping: missing name or macro - ${mapping.name || 'unnamed'}`);
+      return false;
+    }
+    
+    // Make sure enabled property exists
+    if (typeof mapping.enabled !== 'boolean') {
+      console.log(`Fixing 'enabled' property for mapping: ${mapping.name}`);
+      mapping.enabled = true;
+    }
+    
+    // Ensure at least one gesture ID is valid for matching
+    if (!mapping.leftGestureId && !mapping.rightGestureId) {
+      console.log(`Warning: Mapping "${mapping.name}" has no valid gesture IDs`);
+      
+      // Try to recover by converting emoji to gesture ID if we have the emoji
+      if (mapping.leftGesture && !mapping.leftGestureId) {
+        mapping.leftGestureId = emojiToGestureIdMap[mapping.leftGesture] || null;
+        console.log(`Recovered leftGestureId for "${mapping.name}": ${mapping.leftGestureId}`);
+      }
+      
+      if (mapping.rightGesture && !mapping.rightGestureId) {
+        mapping.rightGestureId = emojiToGestureIdMap[mapping.rightGesture] || null;
+        console.log(`Recovered rightGestureId for "${mapping.name}": ${mapping.rightGestureId}`);
+      }
+      
+      // If we still have no valid gesture IDs, this mapping is unusable
+      if (!mapping.leftGestureId && !mapping.rightGestureId) {
+        console.log(`Removing unusable mapping "${mapping.name}" with no valid gesture IDs`);
+        return false;
+      }
+    }
+    
+    return true;
+  });
+  
+  // Save the cleaned up mappings
+  saveDataToFile(mappingsPath, mappings);
+  console.log(`Validation complete. ${mappings.length} valid mappings retained.`);
 }; 
