@@ -17,8 +17,7 @@ contextBridge.exposeInMainWorld('api', {
       'delete-mapping',
       'toggle-detection',
       'get-detection-state',
-      'execute-macro',
-      'update-gesture-config'
+      'execute-macro'
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
@@ -34,8 +33,7 @@ contextBridge.exposeInMainWorld('api', {
       'gesture-detected',
       'detection-status',
       'detection-state',
-      'macro-executed',
-      'gesture-config-updated'
+      'macro-executed'
     ];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender` 
@@ -52,8 +50,7 @@ contextBridge.exposeInMainWorld('api', {
       'gesture-detected',
       'detection-status',
       'detection-state',
-      'macro-executed',
-      'gesture-config-updated'
+      'macro-executed'
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.removeListener(channel, func);

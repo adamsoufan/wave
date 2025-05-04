@@ -23,26 +23,12 @@ let socketServer = null;
 // Socket server port
 const SOCKET_PORT = 5050;
 
-// Gesture detection configuration
-const gestureConfig = {
-  cooldownPeriod: 1000, // milliseconds between detecting the same gesture again (doesn't affect different gestures)
-  continuousDetection: true, // Whether to continuously detect the same gesture when held
-  gestureTimeout: 500     // Time in ms after which a gesture is considered gone if not seen
-};
-
 // Define gesture IDs for internal use
 const gestureData = {
   'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
   'fist': { id: 'fist', emoji: '✊', name: 'Fist' },
   'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' }
 };
-
-// Track when each gesture was last detected to implement cooldown
-const lastGestureTime = {};
-
-// Track currently active gestures and when they were last seen
-const activeGestures = new Map(); // Maps gesture ID to last seen timestamp
-let gestureCheckTimer = null;
 
 // Map emoji representations back to gesture IDs (for UI → internal conversion)
 const emojiToGestureIdMap = {
@@ -133,17 +119,11 @@ const startSocketServer = () => {
         const messages = buffer.split('\n');
         buffer = messages.pop(); // Keep the last potentially incomplete message
         
-        // Track detected gestures in this batch
-        const detectedGestures = [];
-        
         messages.forEach(message => {
           if (message.trim()) {
             try {
               const parsedData = JSON.parse(message);
               if (parsedData.gesture) {
-                // Add to the list of currently detected gestures
-                detectedGestures.push(parsedData.gesture);
-                // Process the gesture
                 handleDetectedGesture(parsedData.gesture);
               }
             } catch (error) {
@@ -151,24 +131,11 @@ const startSocketServer = () => {
             }
           }
         });
-        
-        // If we got any gestures in this batch, update the active gestures
-        if (detectedGestures.length > 0) {
-          updateActiveGestures(detectedGestures);
-        }
       });
       
       // Handle socket closure
       socket.on('close', () => {
         console.log('Python detector disconnected from socket server');
-        // Clear active gestures when connection closes
-        activeGestures.clear();
-        
-        // Stop all timers
-        if (gestureCheckTimer) {
-          clearInterval(gestureCheckTimer);
-          gestureCheckTimer = null;
-        }
       });
       
       // Handle socket errors
@@ -235,15 +202,6 @@ const startGestureDetection = () => {
   }
   
   try {
-    // Reset gesture detection state
-    Object.keys(lastGestureTime).forEach(key => delete lastGestureTime[key]);
-    activeGestures.clear();
-    
-    if (gestureCheckTimer) {
-      clearInterval(gestureCheckTimer);
-      gestureCheckTimer = null;
-    }
-    
     // Start the socket server first
     if (!startSocketServer()) {
       console.error('Failed to start socket server');
@@ -271,19 +229,10 @@ const startGestureDetection = () => {
       const output = data.toString().trim();
       console.log(`Detector output: ${output}`);
       
-      // Track detected gestures in this batch
-      const detectedGestures = [];
-      
       // Look for gesture detection messages
       if (output.includes('[GESTURE]')) {
         const gesture = output.split('[GESTURE]')[1].trim();
-        detectedGestures.push(gesture);
         handleDetectedGesture(gesture);
-      }
-      
-      // If we got any gestures in this batch, update the active gestures
-      if (detectedGestures.length > 0) {
-        updateActiveGestures(detectedGestures);
       }
     });
     
@@ -327,15 +276,6 @@ const stopGestureDetection = () => {
   }
   
   try {
-    // Reset gesture detection state
-    Object.keys(lastGestureTime).forEach(key => delete lastGestureTime[key]);
-    activeGestures.clear();
-    
-    if (gestureCheckTimer) {
-      clearInterval(gestureCheckTimer);
-      gestureCheckTimer = null;
-    }
-    
     // Kill the detector process
     detectorProcess.kill();
     isDetecting = false;
@@ -358,74 +298,6 @@ const stopGestureDetection = () => {
 const handleDetectedGesture = (gesture) => {
   console.log(`Detected gesture: ${gesture}`);
   
-  // Get current time
-  const currentTime = Date.now();
-  
-  // Mark this gesture as active with the current timestamp
-  activeGestures.set(gesture, currentTime);
-  
-  // Check if this is the same gesture as before and if it's within the cooldown period
-  const lastTime = lastGestureTime[gesture] || 0;
-  const timeSinceLastGesture = currentTime - lastTime;
-  
-  // If the same gesture was detected less than the cooldown period, ignore it
-  // This is a safety check in case the Python detector sends rapid events
-  if (timeSinceLastGesture < gestureConfig.cooldownPeriod) {
-    console.log(`Ignoring repeated gesture ${gesture}: only ${timeSinceLastGesture}ms since last detection (cooldown: ${gestureConfig.cooldownPeriod}ms)`);
-    
-    // Start the gesture check timer if not already running
-    ensureGestureCheckTimer();
-    
-    return;
-  }
-  
-  // Update the last detection time for this gesture
-  lastGestureTime[gesture] = currentTime;
-  
-  // Start the gesture check timer if not already running
-  ensureGestureCheckTimer();
-  
-  // Process the gesture
-  processGesture(gesture);
-};
-
-// Ensure the gesture check timer is running
-const ensureGestureCheckTimer = () => {
-  if (!gestureCheckTimer) {
-    gestureCheckTimer = setInterval(() => {
-      checkActiveGestures();
-    }, gestureConfig.gestureTimeout);
-  }
-};
-
-// Function to check and clean up active gestures that haven't been seen recently
-const checkActiveGestures = () => {
-  const currentTime = Date.now();
-  
-  // Check each active gesture
-  activeGestures.forEach((lastSeenTime, gesture) => {
-    const timeSinceLastSeen = currentTime - lastSeenTime;
-    
-    // If we haven't seen this gesture for a while, remove it
-    if (timeSinceLastSeen > gestureConfig.gestureTimeout) {
-      console.log(`Gesture ${gesture} no longer detected (not seen for ${timeSinceLastSeen}ms)`);
-      activeGestures.delete(gesture);
-    }
-  });
-  
-  // If there are no active gestures, stop the timer
-  if (activeGestures.size === 0) {
-    console.log('No active gestures - stopping gesture check timer');
-    
-    if (gestureCheckTimer) {
-      clearInterval(gestureCheckTimer);
-      gestureCheckTimer = null;
-    }
-  }
-};
-
-// Function to process a gesture (separated from detection logic)
-const processGesture = (gesture) => {
   // Get gesture data (includes emoji for display purposes only)
   const gestureInfo = gestureData[gesture] || null;
   
@@ -437,7 +309,6 @@ const processGesture = (gesture) => {
   // For UI display - the emoji is only for visualization
   const gestureEmoji = gestureInfo.emoji;
   
-  console.log(`Processing gesture: ${gesture}`);
   console.log(`Gesture info:`, gestureInfo);
   console.log(`Checking ${mappings.length} mappings for matches with gesture: ${gesture}`);
   
@@ -849,42 +720,6 @@ ipcMain.on('get-detection-state', (event) => {
   event.reply('detection-state', { detecting: isDetecting });
 });
 
-// Update gesture configuration
-ipcMain.on('update-gesture-config', (event, config) => {
-  if (config) {
-    // Update cooldown period if provided
-    if (typeof config.cooldownPeriod === 'number') {
-      // Ensure the cooldown is not too small (avoid rapid repeated detections)
-      gestureConfig.cooldownPeriod = Math.max(100, config.cooldownPeriod);
-      console.log(`Updated gesture cooldown period to ${gestureConfig.cooldownPeriod}ms`);
-    }
-    
-    // Update continuous detection if provided
-    if (typeof config.continuousDetection === 'boolean') {
-      gestureConfig.continuousDetection = config.continuousDetection;
-      console.log(`${gestureConfig.continuousDetection ? 'Enabled' : 'Disabled'} continuous gesture detection`);
-    }
-    
-    // Update gesture timeout if provided
-    if (typeof config.gestureTimeout === 'number') {
-      // Ensure timeout is not too small or too large
-      gestureConfig.gestureTimeout = Math.max(200, Math.min(2000, config.gestureTimeout));
-      console.log(`Updated gesture timeout to ${gestureConfig.gestureTimeout}ms`);
-      
-      // Restart the gesture check timer if running
-      if (gestureCheckTimer) {
-        clearInterval(gestureCheckTimer);
-        gestureCheckTimer = setInterval(() => {
-          checkActiveGestures();
-        }, gestureConfig.gestureTimeout);
-      }
-    }
-  }
-  
-  // Reply with the current config
-  event.reply('gesture-config-updated', { ...gestureConfig });
-});
-
 // Function to create the tray icon
 const createTray = () => {
   try {
@@ -1070,20 +905,4 @@ const validateMappings = () => {
   // Save the cleaned up mappings
   saveDataToFile(mappingsPath, mappings);
   console.log(`Validation complete. ${mappings.length} valid mappings retained.`);
-};
-
-// Function to update the list of active gestures based on what's currently detected
-const updateActiveGestures = (detectedGestures) => {
-  // Get current time
-  const currentTime = Date.now();
-  
-  // Update timestamps for all detected gestures
-  detectedGestures.forEach(gesture => {
-    activeGestures.set(gesture, currentTime);
-  });
-  
-  // Make sure our timers are running as long as we have active gestures
-  if (activeGestures.size > 0) {
-    ensureGestureCheckTimer();
-  }
-};
+}; 
