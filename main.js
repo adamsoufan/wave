@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -12,6 +12,7 @@ const net = require('net');
 let mainWindow;
 let macros = [];
 let mappings = [];
+let tray = null;
 
 // Detector process variables
 let detectorProcess = null;
@@ -21,12 +22,22 @@ let socketServer = null;
 // Socket server port
 const SOCKET_PORT = 5050;
 
-// Gesture mappings
-// Map the detector's output gestures to emoji representations used in the UI
-const gestureToEmojiMap = {
-  'open_hand': '✋',
-  'fist': '✊',
-  'thumbs_up': '👍'
+// Define gesture IDs for internal use
+const gestureData = {
+  'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
+  'fist': { id: 'fist', emoji: '✊', name: 'Fist' },
+  'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' }
+};
+
+// Map emoji representations back to gesture IDs (for UI → internal conversion)
+const emojiToGestureIdMap = {
+  '✋': 'open_hand',
+  '✊': 'fist', 
+  '👍': 'thumbs_up',
+  // Provide mappings for other emojis in the UI
+  '👋': 'wave',
+  '✌️': 'peace',
+  '👌': 'ok'
 };
 
 // Paths for storing macros and mappings data
@@ -77,6 +88,11 @@ const createWindow = () => {
   if (process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
   }
+  
+  // When main window is closed, don't stop detection - just set the reference to null
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 };
 
 // Function to start the socket server
@@ -86,59 +102,84 @@ const startSocketServer = () => {
     return;
   }
   
-  // Create the socket server
-  socketServer = net.createServer((socket) => {
-    console.log('Python detector connected to socket server');
-    
-    let buffer = '';
-    
-    // Handle data received from the detector
-    socket.on('data', (data) => {
-      // Convert buffer to string and append to existing buffer
-      buffer += data.toString();
+  try {
+    // Create the socket server
+    socketServer = net.createServer((socket) => {
+      console.log('Python detector connected to socket server');
       
-      // Process complete JSON messages
-      const messages = buffer.split('\n');
-      buffer = messages.pop(); // Keep the last potentially incomplete message
+      let buffer = '';
       
-      messages.forEach(message => {
-        if (message.trim()) {
-          try {
-            const parsedData = JSON.parse(message);
-            if (parsedData.gesture) {
-              handleDetectedGesture(parsedData.gesture);
+      // Handle data received from the detector
+      socket.on('data', (data) => {
+        // Convert buffer to string and append to existing buffer
+        buffer += data.toString();
+        
+        // Process complete JSON messages
+        const messages = buffer.split('\n');
+        buffer = messages.pop(); // Keep the last potentially incomplete message
+        
+        messages.forEach(message => {
+          if (message.trim()) {
+            try {
+              const parsedData = JSON.parse(message);
+              if (parsedData.gesture) {
+                handleDetectedGesture(parsedData.gesture);
+              }
+            } catch (error) {
+              console.error('Error parsing JSON from detector:', error);
             }
-          } catch (error) {
-            console.error('Error parsing JSON from detector:', error);
           }
-        }
+        });
+      });
+      
+      // Handle socket closure
+      socket.on('close', () => {
+        console.log('Python detector disconnected from socket server');
+      });
+      
+      // Handle socket errors
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
       });
     });
     
-    // Handle socket closure
-    socket.on('close', () => {
-      console.log('Python detector disconnected from socket server');
+    // Start listening on the specified port
+    socketServer.listen(SOCKET_PORT, () => {
+      console.log(`Socket server listening on port ${SOCKET_PORT}`);
     });
     
-    // Handle socket errors
-    socket.on('error', (error) => {
-      console.error('Socket error:', error);
+    // Handle server errors
+    socketServer.on('error', (error) => {
+      console.error('Socket server error:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${SOCKET_PORT} is already in use`);
+        // Try to close any existing instance and restart
+        try {
+          const tempServer = net.createServer();
+          tempServer.on('error', () => {
+            // Port is in use and not accessible
+            console.error(`Port ${SOCKET_PORT} is in use and cannot be released`);
+          });
+          
+          tempServer.listen(SOCKET_PORT, () => {
+            tempServer.close();
+            console.log(`Port ${SOCKET_PORT} was in use but has been released`);
+            // Try starting again after a short delay
+            setTimeout(() => startSocketServer(), 1000);
+          });
+        } catch (err) {
+          console.error('Failed to release port:', err);
+        }
+      }
+      socketServer = null;
     });
-  });
-  
-  // Start listening on the specified port
-  socketServer.listen(SOCKET_PORT, () => {
-    console.log(`Socket server listening on port ${SOCKET_PORT}`);
-  });
-  
-  // Handle server errors
-  socketServer.on('error', (error) => {
-    console.error('Socket server error:', error);
-    if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${SOCKET_PORT} is already in use`);
-    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to start socket server:', error);
     socketServer = null;
-  });
+    return false;
+  }
 };
 
 // Function to stop the socket server
@@ -161,27 +202,36 @@ const startGestureDetection = () => {
   
   try {
     // Start the socket server first
-    startSocketServer();
+    if (!startSocketServer()) {
+      console.error('Failed to start socket server');
+      return false;
+    }
     
     // Get the path to the detector script
-    const detectorScriptPath = path.join(__dirname, 'gesture-detection', 'Detector.py');
-    const detectorModelPath = path.join(__dirname, 'gesture-detection', 'hand_gesture_knn_model.pkl');
+    const detectorDir = path.join(__dirname, 'gesture-detection');
+    const detectorScriptPath = path.join(detectorDir, 'Detector.py');
     
-    // Spawn the Python process
-    detectorProcess = spawn('python', [detectorScriptPath]);
+    console.log(`Starting detector from: ${detectorScriptPath}`);
+    
+    // Spawn the Python process with working directory set to the detection folder
+    detectorProcess = spawn('python', [detectorScriptPath], {
+      cwd: detectorDir
+    });
     
     isDetecting = true;
+    
+    // Update tray menu to reflect new state
+    updateTrayMenu();
     
     // Handle process output
     detectorProcess.stdout.on('data', (data) => {
       const output = data.toString().trim();
+      console.log(`Detector output: ${output}`);
       
       // Look for gesture detection messages
       if (output.includes('[GESTURE]')) {
         const gesture = output.split('[GESTURE]')[1].trim();
         handleDetectedGesture(gesture);
-      } else {
-        console.log(`Detector output: ${output}`);
       }
     });
     
@@ -199,7 +249,10 @@ const startGestureDetection = () => {
       // Stop the socket server when the detector is stopped
       stopSocketServer();
       
-      // Notify renderer that detection has stopped
+      // Update tray menu
+      updateTrayMenu();
+      
+      // Notify renderer that detection has stopped (if window exists)
       if (mainWindow) {
         mainWindow.webContents.send('detection-status', { detecting: false });
       }
@@ -230,6 +283,9 @@ const stopGestureDetection = () => {
     // Stop the socket server
     stopSocketServer();
     
+    // Update tray menu
+    updateTrayMenu();
+    
     return true;
   } catch (error) {
     console.error('Failed to stop gesture detection:', error);
@@ -241,41 +297,85 @@ const stopGestureDetection = () => {
 const handleDetectedGesture = (gesture) => {
   console.log(`Detected gesture: ${gesture}`);
   
-  // Convert gesture name to emoji representation
-  const gestureEmoji = gestureToEmojiMap[gesture] || null;
+  // Get gesture data (includes emoji for display purposes only)
+  const gestureInfo = gestureData[gesture] || null;
   
-  if (!gestureEmoji) {
-    console.log(`No emoji mapping for gesture: ${gesture}`);
+  if (!gestureInfo) {
+    console.log(`No gesture mapping for: ${gesture}`);
     return;
   }
   
-  console.log(`Gesture emoji: ${gestureEmoji}`);
+  // For UI display - the emoji is only for visualization
+  const gestureEmoji = gestureInfo.emoji;
+  
+  console.log(`Gesture info:`, gestureInfo);
+  console.log(`Checking ${mappings.length} mappings for matches with gesture: ${gesture}`);
   
   // Find matching mappings that are enabled
-  const matchingMappings = mappings.filter(mapping => 
-    mapping.enabled && 
-    (mapping.leftGesture === gestureEmoji || mapping.rightGesture === gestureEmoji)
-  );
+  const matchingMappings = mappings.filter(mapping => {
+    console.log(`\nChecking mapping: "${mapping.name}"`);
+    console.log(`  Left hand: ${mapping.leftGestureId || 'none'}, Right hand: ${mapping.rightGestureId || 'none'}, Enabled: ${mapping.enabled}`);
+    
+    if (!mapping.enabled) {
+      console.log(`  Skipping disabled mapping`);
+      return false;
+    }
+    
+    // Case 1: Only one hand gesture is defined in the mapping
+    if ((mapping.leftGestureId && !mapping.rightGestureId) || 
+        (!mapping.leftGestureId && mapping.rightGestureId)) {
+      // Match if the detected gesture matches either defined hand
+      const isMatch = mapping.leftGestureId === gesture || mapping.rightGestureId === gesture;
+      console.log(`  Single-hand mapping: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
+      return isMatch;
+    }
+    // Case 2: Both hands are defined in the mapping
+    // We can't tell if this is left or right hand from detector, so we'll 
+    // assume it's either-or for now. A future enhancement would be to use 
+    // the mediapipe data to determine which hand is which.
+    else if (mapping.leftGestureId && mapping.rightGestureId) {
+      // For now, we match if either hand matches the gesture
+      const isMatch = mapping.leftGestureId === gesture || mapping.rightGestureId === gesture;
+      console.log(`  Dual-hand mapping: ${isMatch ? 'MATCH' : 'NO MATCH'}`);
+      return isMatch;
+    }
+    
+    console.log(`  No valid gesture IDs defined in mapping`);
+    return false;
+  });
   
   if (matchingMappings.length > 0) {
-    console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings);
+    console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings.map(m => m.name).join(', '));
+    
+    // Show a notification for the first matching mapping
+    if (!mainWindow || !mainWindow.isFocused()) {
+      // Only show notification if the window is not focused or doesn't exist
+      const mapping = matchingMappings[0];
+      new Notification({
+        title: 'Gesture Detected',
+        body: `Detected "${gestureInfo.name}" ${gestureEmoji} - Macro: ${mapping.name}`,
+        silent: true // Don't play a sound to avoid annoyance with frequent detections
+      }).show();
+    }
     
     // Send the matching mappings to the renderer
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
-        gesture,
+        gestureId: gesture,
         gestureEmoji,
+        gestureName: gestureInfo.name,
         matchingMappings
       });
     }
   } else {
-    console.log(`No matching mappings found for gesture: ${gesture} (${gestureEmoji})`);
+    console.log(`No matching mappings found for gesture: ${gesture}`);
     
     // Send the detected gesture to the renderer anyway (for status display)
     if (mainWindow) {
       mainWindow.webContents.send('gesture-detected', {
-        gesture,
+        gestureId: gesture,
         gestureEmoji,
+        gestureName: gestureInfo.name,
         matchingMappings: []
       });
     }
@@ -289,7 +389,14 @@ app.whenReady().then(() => {
   macros = loadDataFromFile(macrosPath, []);
   mappings = loadDataFromFile(mappingsPath, []);
   
+  // Validate and fix mappings
+  validateMappings();
+  
+  // Create the main window
   createWindow();
+  
+  // Create the tray icon
+  createTray();
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
@@ -302,14 +409,9 @@ app.whenReady().then(() => {
 
 // Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
-  // Stop gesture detection if running
-  if (isDetecting && detectorProcess) {
-    stopGestureDetection();
-  }
-  
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Don't quit the app when all windows are closed
+  // We want it to keep running in the background for gesture detection
+  console.log('All windows closed, app still running in background for gesture detection');
 });
 
 // Clean up processes on app quit
@@ -338,6 +440,9 @@ ipcMain.on('toggle-detection', (event, shouldDetect) => {
   } else {
     success = stopGestureDetection();
   }
+  
+  // Update the tray menu
+  updateTrayMenu();
   
   // Send status back to renderer
   event.reply('detection-status', { 
@@ -368,15 +473,45 @@ ipcMain.on('save-macro', (event, macro) => {
 
 // Save gesture mapping
 ipcMain.on('save-gesture-mapping', (event, mapping) => {
+  console.log('Saving gesture mapping. Received data:', mapping);
+
+  // Use the leftGestureId and rightGestureId from the UI if available
+  let leftGestureId = mapping.leftGestureId || null;
+  let rightGestureId = mapping.rightGestureId || null;
+
+  console.log(`Initial gesture IDs - Left: ${leftGestureId}, Right: ${rightGestureId}`);
+  
+  // Only use emoji to ID conversion as a fallback when the IDs aren't directly provided
+  if (!leftGestureId && mapping.leftGesture) {
+    leftGestureId = emojiToGestureIdMap[mapping.leftGesture] || null;
+    console.log(`Converted left gesture emoji ${mapping.leftGesture} to ID: ${leftGestureId}`);
+  }
+  
+  if (!rightGestureId && mapping.rightGesture) {
+    rightGestureId = emojiToGestureIdMap[mapping.rightGesture] || null;
+    console.log(`Converted right gesture emoji ${mapping.rightGesture} to ID: ${rightGestureId}`);
+  }
+  
+  // Store both emoji (for display) and ID (for matching)
+  const processedMapping = {
+    ...mapping,
+    leftGestureId,
+    rightGestureId
+  };
+  
+  console.log('Processed mapping to save:', processedMapping);
+  
   // Check if mapping already exists
   const existingIndex = mappings.findIndex(m => m.name === mapping.name);
   
   if (existingIndex !== -1) {
     // Update existing mapping
-    mappings[existingIndex] = mapping;
+    mappings[existingIndex] = processedMapping;
+    console.log(`Updated existing mapping at index ${existingIndex}`);
   } else {
     // Add new mapping
-    mappings.push(mapping);
+    mappings.push(processedMapping);
+    console.log('Added new mapping');
   }
   
   // Save to file
@@ -456,4 +591,196 @@ ipcMain.on('delete-mapping', (event, mappingName) => {
     // Reply with updated mappings list
     event.reply('mappings-loaded', mappings);
   }
-}); 
+});
+
+// Handle requests for the current detection state
+ipcMain.on('get-detection-state', (event) => {
+  event.reply('detection-state', { detecting: isDetecting });
+});
+
+// Function to create the tray icon
+const createTray = () => {
+  try {
+    // Create a simple icon programmatically
+    const icon = nativeImage.createEmpty();
+    // Use 16x16 size for tray (standard tray icon size)
+    const size = { width: 16, height: 16 };
+    
+    // Try to use app icon if it exists
+    let iconPath = null;
+    if (process.platform === 'darwin') {
+      // macOS app icon
+      iconPath = path.join(__dirname, 'build', 'icon.icns');
+    } else if (process.platform === 'win32') {
+      // Windows app icon
+      iconPath = path.join(__dirname, 'build', 'icon.ico');
+    } else {
+      // Linux app icon
+      iconPath = path.join(__dirname, 'build', 'icon.png');
+    }
+    
+    // Create tray with available icon or empty icon
+    if (iconPath && fs.existsSync(iconPath)) {
+      tray = new Tray(iconPath);
+    } else {
+      // Use empty icon as fallback
+      tray = new Tray(icon);
+    }
+    
+    const contextMenu = Menu.buildFromTemplate([
+      { 
+        label: 'Open Wave App', 
+        click: () => {
+          if (!mainWindow) {
+            createWindow();
+          } else {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        } 
+      },
+      { 
+        label: isDetecting ? 'Stop Gesture Detection' : 'Start Gesture Detection',
+        click: () => {
+          if (isDetecting) {
+            stopGestureDetection();
+          } else {
+            startGestureDetection();
+          }
+          // Update the menu item after toggling
+          updateTrayMenu();
+        }
+      },
+      { type: 'separator' },
+      { 
+        label: 'Exit', 
+        click: () => {
+          // Stop gesture detection before exiting
+          if (isDetecting && detectorProcess) {
+            stopGestureDetection();
+          }
+          app.quit();
+        } 
+      }
+    ]);
+    
+    tray.setToolTip('Wave Gesture App');
+    tray.setContextMenu(contextMenu);
+    
+    // Double-click on the tray icon opens the app
+    tray.on('double-click', () => {
+      if (!mainWindow) {
+        createWindow();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  } catch (error) {
+    console.error('Error creating tray icon:', error);
+    // If we can't create a tray icon, still allow the app to run
+  }
+};
+
+// Function to update the tray menu (e.g., when detection status changes)
+const updateTrayMenu = () => {
+  if (!tray) return;
+  
+  const contextMenu = Menu.buildFromTemplate([
+    { 
+      label: 'Open Wave App', 
+      click: () => {
+        if (!mainWindow) {
+          createWindow();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      } 
+    },
+    { 
+      label: isDetecting ? 'Stop Gesture Detection' : 'Start Gesture Detection',
+      click: () => {
+        if (isDetecting) {
+          stopGestureDetection();
+        } else {
+          startGestureDetection();
+        }
+        // Update the menu again after toggling
+        updateTrayMenu();
+      }
+    },
+    { type: 'separator' },
+    { 
+      label: 'Exit', 
+      click: () => {
+        // Stop gesture detection before exiting
+        if (isDetecting && detectorProcess) {
+          stopGestureDetection();
+        }
+        app.quit();
+      } 
+    }
+  ]);
+  
+  tray.setContextMenu(contextMenu);
+};
+
+// Function to validate and fix mappings
+const validateMappings = () => {
+  if (!mappings || !Array.isArray(mappings)) {
+    console.log('Mappings is not an array, initializing empty array');
+    mappings = [];
+    return;
+  }
+  
+  console.log(`Validating ${mappings.length} mappings`);
+  
+  // Filter out invalid mappings and fix any issues
+  mappings = mappings.filter(mapping => {
+    // Basic structure validation
+    if (!mapping || typeof mapping !== 'object') {
+      console.log('Removing invalid mapping (not an object)');
+      return false;
+    }
+    
+    if (!mapping.name || !mapping.macro) {
+      console.log(`Removing invalid mapping: missing name or macro - ${mapping.name || 'unnamed'}`);
+      return false;
+    }
+    
+    // Make sure enabled property exists
+    if (typeof mapping.enabled !== 'boolean') {
+      console.log(`Fixing 'enabled' property for mapping: ${mapping.name}`);
+      mapping.enabled = true;
+    }
+    
+    // Ensure at least one gesture ID is valid for matching
+    if (!mapping.leftGestureId && !mapping.rightGestureId) {
+      console.log(`Warning: Mapping "${mapping.name}" has no valid gesture IDs`);
+      
+      // Try to recover by converting emoji to gesture ID if we have the emoji
+      if (mapping.leftGesture && !mapping.leftGestureId) {
+        mapping.leftGestureId = emojiToGestureIdMap[mapping.leftGesture] || null;
+        console.log(`Recovered leftGestureId for "${mapping.name}": ${mapping.leftGestureId}`);
+      }
+      
+      if (mapping.rightGesture && !mapping.rightGestureId) {
+        mapping.rightGestureId = emojiToGestureIdMap[mapping.rightGesture] || null;
+        console.log(`Recovered rightGestureId for "${mapping.name}": ${mapping.rightGestureId}`);
+      }
+      
+      // If we still have no valid gesture IDs, this mapping is unusable
+      if (!mapping.leftGestureId && !mapping.rightGestureId) {
+        console.log(`Removing unusable mapping "${mapping.name}" with no valid gesture IDs`);
+        return false;
+      }
+    }
+    
+    return true;
+  });
+  
+  // Save the cleaned up mappings
+  saveDataToFile(mappingsPath, mappings);
+  console.log(`Validation complete. ${mappings.length} valid mappings retained.`);
+}; 

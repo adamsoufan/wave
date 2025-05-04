@@ -180,14 +180,14 @@
 }
 
 .toggle-switch.on .toggle-slider {
-    transform: translateX(0);
-    background-color: #f44336;
+    transform: translateX(60px);
+    background-color: #4CAF50; /* Green for ON */
     border-radius: 20px;
 }
 
 .toggle-switch.off .toggle-slider {
-    transform: translateX(60px);
-    background-color: #4CAF50;
+    transform: translateX(0);
+    background-color: #f44336; /* Red for OFF */
     border-radius: 20px;
 }
 
