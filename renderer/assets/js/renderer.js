@@ -157,78 +157,82 @@ function setupGesturesPage() {
         // Clear the existing grid
         gestureGrid.innerHTML = '';
         
-        // Add mappings to the grid
-        if (loadedMappings && loadedMappings.length > 0) {
-            loadedMappings.forEach(mapping => {
-                // Create gesture card
-                const card = document.createElement('div');
-                card.classList.add('gesture-card');
-                
-                // Gesture name
-                const nameDIv = document.createElement('div');
-                nameDIv.classList.add('gesture-name');
-                nameDIv.textContent = mapping.name;
-                card.appendChild(nameDIv);
-                
-                // Gesture icon
-                const iconDiv = document.createElement('div');
-                iconDiv.classList.add('gesture-icon');
-                
-                const circleIcon = document.createElement('div');
-                circleIcon.classList.add('circle-icon');
-                // Use the preview emoji or any available gesture
-                circleIcon.textContent = mapping.previewEmoji || mapping.rightGesture || mapping.leftGesture || '👍';
-                
-                iconDiv.appendChild(circleIcon);
-                card.appendChild(iconDiv);
-                
-                // Toggle container
-                const toggleContainer = document.createElement('div');
-                toggleContainer.classList.add('toggle-container');
-                
-                const toggleSwitch = document.createElement('div');
-                toggleSwitch.classList.add('toggle-switch');
-                // Set initial state
-                if (mapping.enabled) {
-                    toggleSwitch.classList.add('on');
-                } else {
-                    toggleSwitch.classList.add('off');
-                }
-                
-                const onLabel = document.createElement('span');
-                onLabel.classList.add('toggle-label');
-                onLabel.textContent = 'ON';
-                
-                const offLabel = document.createElement('span');
-                offLabel.classList.add('toggle-label');
-                offLabel.textContent = 'OFF';
-                
-                const toggleSlider = document.createElement('div');
-                toggleSlider.classList.add('toggle-slider');
-                
-                toggleSwitch.appendChild(onLabel);
-                toggleSwitch.appendChild(offLabel);
-                toggleSwitch.appendChild(toggleSlider);
-                toggleContainer.appendChild(toggleSwitch);
-                card.appendChild(toggleContainer);
-                
-                // Add the card to the grid
-                gestureGrid.appendChild(card);
-                
-                // Add toggle functionality
-                toggleSwitch.addEventListener('click', function() {
-                    this.classList.toggle('on');
-                    this.classList.toggle('off');
-                    
-                    // Send status change to main process
-                    const isEnabled = this.classList.contains('on');
-                    window.api.send('gesture-toggle', {
-                        name: mapping.name,
-                        enabled: isEnabled
-                    });
-                });
-            });
+        // Check if there are any mappings
+        if (!loadedMappings || loadedMappings.length === 0) {
+            // Create and display the empty state message
+            const emptyState = document.createElement('div');
+            emptyState.classList.add('gesture-grid-empty');
+            emptyState.innerHTML = 'You have no saved mappings. To create one, first create a macro in the Macro Hub. Then, go the the Mapping Hub and map a gesture to the macro you created!';
+            gestureGrid.appendChild(emptyState);
+            return;
         }
+        
+        // Add mappings to the grid
+        loadedMappings.forEach(mapping => {
+            // Create gesture card
+            const card = document.createElement('div');
+            card.classList.add('gesture-card');
+            
+            // Gesture name
+            const nameDIv = document.createElement('div');
+            nameDIv.classList.add('gesture-name');
+            nameDIv.textContent = mapping.name;
+            card.appendChild(nameDIv);
+            
+            // Gesture icon
+            const iconDiv = document.createElement('div');
+            iconDiv.classList.add('gesture-icon');
+            
+            const circleIcon = document.createElement('div');
+            circleIcon.classList.add('circle-icon');
+            // Use the preview emoji or any available gesture
+            circleIcon.textContent = mapping.previewEmoji || mapping.rightGesture || mapping.leftGesture || '👍';
+            
+            iconDiv.appendChild(circleIcon);
+            card.appendChild(iconDiv);
+            
+            // Toggle container
+            const toggleContainer = document.createElement('div');
+            toggleContainer.classList.add('toggle-container');
+            
+            const toggleSwitch = document.createElement('div');
+            toggleSwitch.classList.add('toggle-switch');
+            // Set initial state
+            if (mapping.enabled) {
+                toggleSwitch.classList.add('on');
+            } else {
+                toggleSwitch.classList.add('off');
+            }
+            
+            const onLabel = document.createElement('span');
+            onLabel.classList.add('toggle-label');
+            onLabel.textContent = 'ON';
+            
+            const offLabel = document.createElement('span');
+            offLabel.classList.add('toggle-label');
+            offLabel.textContent = 'OFF';
+            
+            toggleContainer.appendChild(offLabel);
+            toggleContainer.appendChild(toggleSwitch);
+            toggleContainer.appendChild(onLabel);
+            card.appendChild(toggleContainer);
+            
+            // Add click handler for the toggle switch
+            toggleSwitch.addEventListener('click', function() {
+                // Toggle the classes
+                this.classList.toggle('on');
+                this.classList.toggle('off');
+                
+                // Update the mapping
+                mapping.enabled = this.classList.contains('on');
+                
+                // Send update to main process
+                window.api.send('update-mapping', mapping);
+            });
+            
+            // Add the card to the grid
+            gestureGrid.appendChild(card);
+        });
     });
 }
 
@@ -885,7 +889,6 @@ function initDragAndDrop() {
             // Create and add drag handle
             const dragHandle = document.createElement('div');
             dragHandle.className = 'drag-handle';
-            dragHandle.innerHTML = '<i class="fas fa-grip-lines"></i>';
             actionHeader.insertBefore(dragHandle, actionHeader.firstChild);
             
             // Make the item draggable
@@ -1010,7 +1013,7 @@ function addActionToList(type, actionList) {
         case 'keypress':
             actionContent = `
                 <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <div class="drag-handle"></div>
                     <span class="action-type-label">Key Press</span>
                     <button class="remove-action">×</button>
                 </div>
@@ -1022,7 +1025,7 @@ function addActionToList(type, actionList) {
         case 'script':
             actionContent = `
                 <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <div class="drag-handle"></div>
                     <span class="action-type-label">Script</span>
                     <button class="remove-action">×</button>
                 </div>
@@ -1038,7 +1041,7 @@ function addActionToList(type, actionList) {
         case 'command':
             actionContent = `
                 <div class="action-header">
-                    <div class="drag-handle"><i class="fas fa-grip-lines"></i></div>
+                    <div class="drag-handle"></div>
                     <span class="action-type-label">Command Line</span>
                     <button class="remove-action">×</button>
                 </div>
