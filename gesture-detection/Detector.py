@@ -16,6 +16,7 @@ THRESHOLD    = 0.5          # > THRESHOLD  ⇒ "unknown"
 COOLDOWN_SEC = 0.75         # debounce period
 PORT         = 5050         # TCP port (if socket used)
 HEADLESS     = True         # False shows a debug window
+CAMERA_INDEX = 0            # Use only the first camera
 # ───────────────────────────────────────────────
 
 try:
@@ -45,19 +46,12 @@ try:
 
     GESTURE_LABELS = {0: "open_hand", 1: "fist", 2: "thumbs_up"}
 
-    # Try different camera indices
-    print("Opening webcam...")
-    cap = None
-    for i in range(4):  # Try indices 0-3
-        print(f"Trying camera index {i}...")
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            print(f"Successfully opened camera at index {i}")
-            break
-        cap.release()
-
+    # Open the default camera (index 0)
+    print(f"Opening webcam at index {CAMERA_INDEX}...")
+    cap = cv2.VideoCapture(CAMERA_INDEX)
+    
     if not cap or not cap.isOpened():
-        print("Error: Could not open any camera")
+        print(f"Error: Could not open camera at index {CAMERA_INDEX}")
         sys.exit(1)
 
     print("Webcam opened successfully")
