@@ -439,7 +439,7 @@ function setupMappingHub() {
             deleteButton = document.createElement('button');
             deleteButton.classList.add('delete-mapping-button');
             deleteButton.textContent = 'Delete';
-            deleteButton.style.marginLeft = '5px';
+            deleteButton.style.marginLeft = '2px';
             deleteButton.style.backgroundColor = '#ff4d4d';
             deleteButton.style.color = 'white';
             deleteButton.style.border = 'none';
@@ -779,7 +779,7 @@ function setupMacroHub() {
             deleteButton = document.createElement('button');
             deleteButton.classList.add('delete-macro-button');
             deleteButton.textContent = 'Delete';
-            deleteButton.style.marginLeft = '5px';
+            deleteButton.style.marginLeft = '2px';
             deleteButton.style.backgroundColor = '#ff4d4d';
             deleteButton.style.color = 'white';
             deleteButton.style.border = 'none';
@@ -794,7 +794,7 @@ function setupMacroHub() {
                 executeButton = document.createElement('button');
                 executeButton.classList.add('execute-macro-button');
                 executeButton.textContent = 'Test';
-                executeButton.style.marginLeft = '5px';
+                executeButton.style.marginLeft = '2px';
                 executeButton.style.backgroundColor = '#4CAF50';
                 executeButton.style.color = 'white';
                 executeButton.style.border = 'none';
@@ -980,7 +980,7 @@ function setupMacroHub() {
                 executeButton = document.createElement('button');
                 executeButton.classList.add('execute-macro-button');
                 executeButton.textContent = 'Test';
-                executeButton.style.marginLeft = '5px';
+                executeButton.style.marginLeft = '2px';
                 executeButton.style.backgroundColor = '#4CAF50';
                 executeButton.style.color = 'white';
                 executeButton.style.border = 'none';
@@ -1008,7 +1008,7 @@ function setupMacroHub() {
                 deleteButton = document.createElement('button');
                 deleteButton.classList.add('delete-macro-button');
                 deleteButton.textContent = 'Delete';
-                deleteButton.style.marginLeft = '5px';
+                deleteButton.style.marginLeft = '2px';
                 deleteButton.style.backgroundColor = '#ff4d4d';
                 deleteButton.style.color = 'white';
                 deleteButton.style.border = 'none';
