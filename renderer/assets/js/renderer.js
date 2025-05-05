@@ -307,11 +307,14 @@ function setupGesturesPage() {
                 this.classList.toggle('on');
                 this.classList.toggle('off');
                 
-                // Update the mapping
+                // Update the mapping in local UI state
                 mapping.enabled = this.classList.contains('on');
                 
-                // Send update to main process
-                window.api.send('update-mapping', mapping);
+                // Send the correct toggle data to main process
+                window.api.send('gesture-toggle', {
+                    name: mapping.name,
+                    enabled: mapping.enabled
+                });
             });
             
             // Add the card to the grid

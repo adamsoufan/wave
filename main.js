@@ -663,6 +663,26 @@ ipcMain.on('save-gesture-mapping', (event, mapping) => {
   event.reply('mappings-loaded', mappings);
 });
 
+// Handle mapping updates from Home screen toggles
+ipcMain.on('update-mapping', (event, mapping) => {
+  console.log('Updating mapping. Received data:', mapping);
+  
+  // Check if mapping exists
+  const existingIndex = mappings.findIndex(m => m.name === mapping.name);
+  
+  if (existingIndex !== -1) {
+    // Update existing mapping
+    mappings[existingIndex] = {
+      ...mappings[existingIndex],  // Preserve any existing fields not in the update
+      ...mapping                   // Apply the updates
+    };
+    console.log(`Updated existing mapping at index ${existingIndex}`);
+    
+    // Save to file
+    saveDataToFile(mappingsPath, mappings);
+  }
+});
+
 // Toggle gesture on/off
 ipcMain.on('gesture-toggle', (event, toggleData) => {
   const { name, enabled } = toggleData;
