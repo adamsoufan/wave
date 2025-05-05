@@ -33,29 +33,7 @@ function setupPageSpecificFunctionality() {
     console.log("Current page: ", pageName);
 
     // Highlight the current page in the sidebar
-    const sidebarItems = document.querySelectorAll('.sidebar-nav li');
-    if (sidebarItems) {
-        // First remove selected class from all items
-        sidebarItems.forEach(item => {
-            item.classList.remove('selected');
-        });
-        
-        // Then apply selectively based on path
-        sidebarItems.forEach(item => {
-            const link = item.querySelector('a');
-            if (link) {
-                const linkPath = link.getAttribute('href');
-                // Check for home page (either empty string or index.html)
-                if ((pageName === '' || pageName === 'index.html') && linkPath === 'index.html') {
-                    item.classList.add('selected');
-                }
-                // Check for other pages
-                else if (pageName === linkPath) {
-                    item.classList.add('selected');
-                }
-            }
-        });
-    }
+    highlightCurrentPage(pageName);
 
     if (pageName === 'index.html' || pageName === '') {
         // Main menu / gestures page functionality
@@ -66,6 +44,38 @@ function setupPageSpecificFunctionality() {
     } else if (pageName === 'macrohub.html') {
         // Macro Hub page functionality
         setupMacroHub();
+    }
+}
+
+// Function to highlight the current page in the sidebar
+function highlightCurrentPage(pageName) {
+    // Get all sidebar items
+    const sidebarItems = document.querySelectorAll('.sidebar-nav li');
+    
+    // Remove selected class from all items first
+    sidebarItems.forEach(item => item.classList.remove('selected'));
+    
+    // Handle each case specifically
+    if (pageName === '' || pageName === 'index.html') {
+        // Find the Home link and highlight it
+        const homeItem = Array.from(sidebarItems).find(item => {
+            const link = item.querySelector('a');
+            return link && link.getAttribute('href') === 'index.html';
+        });
+        
+        if (homeItem) {
+            homeItem.classList.add('selected');
+        }
+    } else {
+        // Find the corresponding link for other pages
+        const currentItem = Array.from(sidebarItems).find(item => {
+            const link = item.querySelector('a');
+            return link && link.getAttribute('href') === pageName;
+        });
+        
+        if (currentItem) {
+            currentItem.classList.add('selected');
+        }
     }
 }
 
