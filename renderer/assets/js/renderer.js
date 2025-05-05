@@ -30,6 +30,25 @@ function setupPageSpecificFunctionality() {
     const currentPath = window.location.pathname;
     const pageName = currentPath.split('/').pop();
 
+    // Highlight the current page in the sidebar
+    const sidebarItems = document.querySelectorAll('.sidebar-nav li');
+    if (sidebarItems) {
+        sidebarItems.forEach(item => {
+            const link = item.querySelector('a');
+            if (link) {
+                const linkPath = link.getAttribute('href');
+                // Check if this is the current page
+                if ((pageName === linkPath) || 
+                    (pageName === '' && linkPath === 'index.html') || 
+                    (pageName === 'index.html' && linkPath === 'index.html')) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            }
+        });
+    }
+
     if (pageName === 'index.html' || pageName === '') {
         // Main menu / gestures page functionality
         setupGesturesPage();
@@ -420,8 +439,14 @@ function setupMappingHub() {
             deleteButton = document.createElement('button');
             deleteButton.classList.add('delete-mapping-button');
             deleteButton.textContent = 'Delete';
-            deleteButton.style.marginLeft = '10px';
+            deleteButton.style.marginLeft = '5px';
             deleteButton.style.backgroundColor = '#ff4d4d';
+            deleteButton.style.color = 'white';
+            deleteButton.style.border = 'none';
+            deleteButton.style.borderRadius = '4px';
+            deleteButton.style.padding = '8px 16px';
+            deleteButton.style.cursor = 'pointer';
+            deleteButton.style.fontWeight = '500';
             
             // Insert after the save button
             saveGestureButton.parentNode.insertBefore(deleteButton, saveGestureButton.nextSibling);
@@ -448,7 +473,7 @@ function setupMappingHub() {
                     // Reset preview
                     const previewCircle = document.querySelector('.gesture-preview-circle');
                     if (previewCircle) {
-                        previewCircle.textContent = '👍';
+                        previewCircle.textContent = '';
                     }
                 }
             });
@@ -478,14 +503,27 @@ function setupMappingHub() {
                     const emoji = this.querySelector('.gesture-emoji').textContent;
                     const gestureId = this.getAttribute('data-gesture-id');
                     
-                    if (activeGestureBlock) {
-                        // Replace the plus icon with the selected emoji
-                        const plusIcon = activeGestureBlock.querySelector('.gesture-plus-icon');
-                        if (plusIcon) {
-                            plusIcon.textContent = emoji;
-                            plusIcon.classList.add('selected-gesture');
-                            // Store the gesture ID as a data attribute
-                            plusIcon.setAttribute('data-gesture-id', gestureId);
+                    // Check if this is the "remove gesture" icon (the NO symbol)
+                    if (gestureId === 'remove-gesture') {
+                        if (activeGestureBlock) {
+                            // Reset the plus icon 
+                            const plusIcon = activeGestureBlock.querySelector('.gesture-plus-icon');
+                            if (plusIcon) {
+                                plusIcon.textContent = '+';
+                                plusIcon.classList.remove('selected-gesture');
+                                plusIcon.removeAttribute('data-gesture-id');
+                            }
+                        }
+                    } else {
+                        if (activeGestureBlock) {
+                            // Replace the plus icon with the selected emoji
+                            const plusIcon = activeGestureBlock.querySelector('.gesture-plus-icon');
+                            if (plusIcon) {
+                                plusIcon.textContent = emoji;
+                                plusIcon.classList.add('selected-gesture');
+                                // Store the gesture ID as a data attribute
+                                plusIcon.setAttribute('data-gesture-id', gestureId);
+                            }
                         }
                     }
                     
@@ -741,11 +779,36 @@ function setupMacroHub() {
             deleteButton = document.createElement('button');
             deleteButton.classList.add('delete-macro-button');
             deleteButton.textContent = 'Delete';
-            deleteButton.style.marginLeft = '10px';
+            deleteButton.style.marginLeft = '5px';
             deleteButton.style.backgroundColor = '#ff4d4d';
+            deleteButton.style.color = 'white';
+            deleteButton.style.border = 'none';
+            deleteButton.style.borderRadius = '4px';
+            deleteButton.style.padding = '8px 16px';
+            deleteButton.style.cursor = 'pointer';
+            deleteButton.style.fontWeight = '500';
             
-            // Insert after the save button
-            saveButton.parentNode.insertBefore(deleteButton, saveButton.nextSibling);
+            // Add an execute button if it doesn't exist
+            let executeButton = document.querySelector('.execute-macro-button');
+            if (!executeButton) {
+                executeButton = document.createElement('button');
+                executeButton.classList.add('execute-macro-button');
+                executeButton.textContent = 'Test';
+                executeButton.style.marginLeft = '5px';
+                executeButton.style.backgroundColor = '#4CAF50';
+                executeButton.style.color = 'white';
+                executeButton.style.border = 'none';
+                executeButton.style.borderRadius = '4px';
+                executeButton.style.padding = '8px 16px';
+                executeButton.style.cursor = 'pointer';
+                executeButton.style.fontWeight = '500';
+                
+                // Insert after the save button
+                saveButton.parentNode.insertBefore(executeButton, saveButton.nextSibling);
+            }
+            
+            // Insert after the test button
+            executeButton.parentNode.insertBefore(deleteButton, executeButton.nextSibling);
             
             // Add click handler for the delete button
             deleteButton.addEventListener('click', function() {
@@ -756,25 +819,12 @@ function setupMacroHub() {
                     // Clear the form
                     macroNameInput.value = '';
                     actionList.innerHTML = '';
+                    
+                    // Remove the buttons
+                    if (executeButton) executeButton.parentNode.removeChild(executeButton);
+                    deleteButton.parentNode.removeChild(deleteButton);
                 }
             });
-        }
-        
-        // Add an execute button if it doesn't exist
-        let executeButton = document.querySelector('.execute-macro-button');
-        if (!executeButton) {
-            executeButton = document.createElement('button');
-            executeButton.classList.add('execute-macro-button');
-            executeButton.textContent = 'Test';
-            executeButton.style.marginLeft = '10px';
-            executeButton.style.backgroundColor = '#4CAF50';
-            
-            // Insert after the delete button or save button
-            if (deleteButton) {
-                deleteButton.parentNode.insertBefore(executeButton, deleteButton.nextSibling);
-            } else {
-                saveButton.parentNode.insertBefore(executeButton, saveButton.nextSibling);
-            }
             
             // Add click handler for the execute button
             executeButton.addEventListener('click', function() {
@@ -852,10 +902,15 @@ function setupMacroHub() {
                 item.classList.remove('selected');
             });
             
-            // Remove the delete button if it exists
+            // Remove the delete and test buttons if they exist
             const deleteButton = document.querySelector('.delete-macro-button');
             if (deleteButton) {
                 deleteButton.parentNode.removeChild(deleteButton);
+            }
+            
+            const executeButton = document.querySelector('.execute-macro-button');
+            if (executeButton) {
+                executeButton.parentNode.removeChild(executeButton);
             }
         });
     }
@@ -917,6 +972,70 @@ function setupMacroHub() {
                 name: macroName,
                 actions: actions
             });
+            
+            // Add the Test and Delete buttons after saving
+            // Add a test button if it doesn't exist
+            let executeButton = document.querySelector('.execute-macro-button');
+            if (!executeButton) {
+                executeButton = document.createElement('button');
+                executeButton.classList.add('execute-macro-button');
+                executeButton.textContent = 'Test';
+                executeButton.style.marginLeft = '5px';
+                executeButton.style.backgroundColor = '#4CAF50';
+                executeButton.style.color = 'white';
+                executeButton.style.border = 'none';
+                executeButton.style.borderRadius = '4px';
+                executeButton.style.padding = '8px 16px';
+                executeButton.style.cursor = 'pointer';
+                executeButton.style.fontWeight = '500';
+                
+                // Insert after the save button
+                saveButton.parentNode.insertBefore(executeButton, saveButton.nextSibling);
+                
+                // Add click handler for the execute button
+                executeButton.addEventListener('click', function() {
+                    const macroName = macroNameInput.value;
+                    if (macroName) {
+                        // Send the execute command to the main process
+                        window.api.send('execute-macro', macroName);
+                    }
+                });
+            }
+            
+            // Add a delete button if it doesn't exist
+            let deleteButton = document.querySelector('.delete-macro-button');
+            if (!deleteButton) {
+                deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-macro-button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.style.marginLeft = '5px';
+                deleteButton.style.backgroundColor = '#ff4d4d';
+                deleteButton.style.color = 'white';
+                deleteButton.style.border = 'none';
+                deleteButton.style.borderRadius = '4px';
+                deleteButton.style.padding = '8px 16px';
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.style.fontWeight = '500';
+                
+                // Insert after the test button
+                executeButton.parentNode.insertBefore(deleteButton, executeButton.nextSibling);
+                
+                // Add click handler for the delete button
+                deleteButton.addEventListener('click', function() {
+                    const macroName = macroNameInput.value;
+                    if (macroName && confirm(`Are you sure you want to delete the macro "${macroName}"?`)) {
+                        window.api.send('delete-macro', macroName);
+                        
+                        // Clear the form
+                        macroNameInput.value = '';
+                        actionList.innerHTML = '';
+                        
+                        // Remove the buttons
+                        if (executeButton) executeButton.parentNode.removeChild(executeButton);
+                        deleteButton.parentNode.removeChild(deleteButton);
+                    }
+                });
+            }
             
             // The list will be updated when the macros-loaded event is received
         });

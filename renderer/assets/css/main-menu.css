@@ -75,12 +75,21 @@
     background-color: #f5f5f5;
 }
 
+.sidebar-nav li.selected {
+    background-color: #e8f0fe;
+    font-weight: 600;
+}
+
 .sidebar-nav a {
     color: #333;
     text-decoration: none;
     font-size: 16px;
     display: block;
     white-space: nowrap;
+}
+
+.sidebar-nav li.selected a {
+    color: #333;
 }
 
 .sidebar.collapsed .sidebar-nav {
