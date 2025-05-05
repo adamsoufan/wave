@@ -94,8 +94,32 @@
             background-color: #f5f7fa;
         }
         
-        ol li, ul li {
+        /* List styling */
+        .help-section ol {
+            padding-left: 40px;
+            margin-left: 0;
+            margin-top: 15px;
+        }
+        
+        .help-section ul {
+            padding-left: 40px;
+            margin-left: 0;
+            margin-top: 15px;
+        }
+        
+        .help-section ol li, .help-section ul li {
             margin-bottom: 10px;
+        }
+        
+        /* Nested lists - even more indentation */
+        .help-section li ul, .help-section li ol {
+            padding-left: 25px;
+            margin-top: 10px;
+        }
+        
+        /* Example section has more indented lists */
+        .example ol, .example ul {
+            padding-left: 25px;
         }
     </style>
 </head>
@@ -177,6 +201,8 @@
                         <li>Click <strong>Save</strong> to store your macro.</li>
                     </ol>
                     
+                    <p class="section-spacer">&nbsp;</p>
+
                     <h3>Mapping Gestures</h3>
                     <ol>
                         <li>Navigate to the <strong>Mapping Hub</strong> page.</li>
@@ -188,6 +214,8 @@
                         <li>Click <strong>Save</strong> to create the mapping.</li>
                     </ol>
                     
+                    <p class="section-spacer">&nbsp;</p>
+
                     <h3>Using Gesture Detection</h3>
                     <ol>
                         <li>Go to the <strong>Home</strong> page.</li>
@@ -206,32 +234,48 @@
                         <h3>Scenario: Control music playback with hand gestures</h3>
                         <p>Let's create a set of gesture controls for your media player:</p>
                         
+                        <p class="section-spacer">&nbsp;</p>
+
                         <h4>Step 1: Create the Play/Pause Macro</h4>
-                        <p>1. Go to <strong>Macro Hub</strong> and click <strong>New Macro</strong>.</p>
-                        <p>2. Name it "Play/Pause".</p>
-                        <p>3. Add a <strong>Key Press</strong> action and set it to "Space" (the universal play/pause shortcut).</p>
-                        <p>4. Click <strong>Save</strong>.</p>
+                        <ol>
+                            <li>Go to <strong>Macro Hub</strong> and click <strong>New Macro</strong>.</li>
+                            <li>Name it "Play/Pause".</li>
+                            <li>Add a <strong>Key Press</strong> action and set it to "Space" (the universal play/pause shortcut).</li>
+                            <li>Click <strong>Save</strong>.</li>
+                        </ol>
                         
+                        <p class="section-spacer">&nbsp;</p>
+                            
                         <h4>Step 2: Create Volume Up/Down Macros</h4>
-                        <p>1. Create a new macro named "Volume Up".</p>
-                        <p>2. Add a <strong>Key Press</strong> action and set it to "Ctrl + Up Arrow".</p>
-                        <p>3. Save and create another macro named "Volume Down".</p>
-                        <p>4. Add a <strong>Key Press</strong> action and set it to "Ctrl + Down Arrow".</p>
+                        <ol>
+                            <li>Create a new macro named "Volume Up".</li>
+                            <li>Add a <strong>Key Press</strong> action and set it to "Ctrl + Up Arrow".</li>
+                            <li>Save and create another macro named "Volume Down".</li>
+                            <li>Add a <strong>Key Press</strong> action and set it to "Ctrl + Down Arrow".</li>
+                        </ol>
                         
+                        <p class="section-spacer">&nbsp;</p>
+
                         <h4>Step 3: Map Gestures</h4>
-                        <p>1. Go to <strong>Mapping Hub</strong> and create a new mapping.</p>
-                        <p>2. Select the "Play/Pause" macro and name the mapping "Play/Pause".</p>
-                        <p>3. For the right hand, select the "Fist" gesture (✊).</p>
-                        <p>4. Save the mapping.</p>
-                        <p>5. Create a second mapping for "Volume Up" with the "Thumbs Up" (👍) gesture.</p>
-                        <p>6. Create a third mapping for "Volume Down" with the "Peace" (✌️) gesture.</p>
+                        <ol>
+                            <li>Go to <strong>Mapping Hub</strong> and create a new mapping.</li>
+                            <li>Select the "Play/Pause" macro and name the mapping "Play/Pause".</li>
+                            <li>For the right hand, select the "Fist" gesture (✊).</li>
+                            <li>Save the mapping.</li>
+                            <li>Create a second mapping for "Volume Up" with the "Thumbs Up" (👍) gesture.</li>
+                            <li>Create a third mapping for "Volume Down" with the "Peace" (✌️) gesture.</li>
+                        </ol>
                         
+                        <p class="section-spacer">&nbsp;</p>                       
+
                         <h4>Step 4: Use Your Gestures</h4>
-                        <p>1. Return to the <strong>Home</strong> page and click <strong>Start Detecting</strong>.</p>
-                        <p>2. Open your media player and start playing something.</p>
-                        <p>3. Make a fist gesture (✊) to pause/play the music.</p>
-                        <p>4. Use thumbs up (👍) to increase volume.</p>
-                        <p>5. Use peace sign (✌️) to decrease volume.</p>
+                        <ol>
+                            <li>Return to the <strong>Home</strong> page and click <strong>Start Detecting</strong>.</li>
+                            <li>Open your media player and start playing something.</li>
+                            <li>Make a fist gesture (✊) to pause/play the music.</li>
+                            <li>Use thumbs up (👍) to increase volume.</li>
+                            <li>Use peace sign (✌️) to decrease volume.</li>
+                        </ol>
                     </div>
                 </div>
                 
@@ -260,6 +304,8 @@
                         <li>Try making the gesture more deliberately or with better lighting.</li>
                     </ul>
                     
+                    <p class="section-spacer">&nbsp;</p>
+
                     <h3>Macro Not Executing</h3>
                     <ul>
                         <li>Verify that the mapping is enabled (toggle should be "ON" on the Home page).</li>
