@@ -1,3 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+
+# Electron-forge output
+out/
+dist/
+
+# Gesture detection Python files (not needed for UI showcase)
+gesture-detection/
+
+# Main process files (not needed for UI showcase)
+# Note: We're keeping these files for reference but they won't be used
+# main.js
+# preload.js
+
+# package files
+package-lock.json
+
 # Electron specific
 dist/
 build/
