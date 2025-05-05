@@ -30,20 +30,28 @@ function setupPageSpecificFunctionality() {
     const currentPath = window.location.pathname;
     const pageName = currentPath.split('/').pop();
 
+    console.log("Current page: ", pageName);
+
     // Highlight the current page in the sidebar
     const sidebarItems = document.querySelectorAll('.sidebar-nav li');
     if (sidebarItems) {
+        // First remove selected class from all items
+        sidebarItems.forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Then apply selectively based on path
         sidebarItems.forEach(item => {
             const link = item.querySelector('a');
             if (link) {
                 const linkPath = link.getAttribute('href');
-                // Check if this is the current page
-                if (linkPath === 'index.html' && (pageName === '' || pageName === 'index.html')) {
+                // Check for home page (either empty string or index.html)
+                if ((pageName === '' || pageName === 'index.html') && linkPath === 'index.html') {
                     item.classList.add('selected');
-                } else if (pageName === linkPath) {
+                }
+                // Check for other pages
+                else if (pageName === linkPath) {
                     item.classList.add('selected');
-                } else {
-                    item.classList.remove('selected');
                 }
             }
         });
@@ -181,7 +189,16 @@ function setupGesturesPage() {
             // Create and display the empty state message
             const emptyState = document.createElement('div');
             emptyState.classList.add('gesture-grid-empty');
-            emptyState.innerHTML = 'You have no saved mappings. To create one, first create a macro in the Macro Hub. Then, go the the Mapping Hub and map a gesture to the macro you created!';
+            emptyState.innerHTML = 'You have no saved mappings. View the Help page using the sidebar to learn how to make one!';
+            
+            // Center the empty state in the content div
+            emptyState.style.display = 'flex';
+            emptyState.style.justifyContent = 'center';
+            emptyState.style.alignItems = 'center';
+            emptyState.style.textAlign = 'center';
+            emptyState.style.height = 'calc(100vh - 200px)';
+            emptyState.style.margin = '0';
+            
             gestureGrid.appendChild(emptyState);
             return;
         }
@@ -703,6 +720,18 @@ function setupMappingHub() {
                 enabled: true // New mappings are enabled by default
             });
             
+            // Show save feedback
+            const originalText = this.textContent;
+            const originalBg = this.style.backgroundColor;
+            this.textContent = 'Saved!';
+            this.style.backgroundColor = '#4CAF50';
+            
+            // Restore original state after a delay
+            setTimeout(() => {
+                this.textContent = originalText;
+                this.style.backgroundColor = originalBg;
+            }, 1500);
+            
             // The list will be updated when the mappings-loaded event is received
         });
     }
@@ -972,6 +1001,18 @@ function setupMacroHub() {
                 name: macroName,
                 actions: actions
             });
+            
+            // Show save feedback
+            const originalText = this.textContent;
+            const originalBg = this.style.backgroundColor;
+            this.textContent = 'Saved!';
+            this.style.backgroundColor = '#4CAF50';
+            
+            // Restore original state after a delay
+            setTimeout(() => {
+                this.textContent = originalText;
+                this.style.backgroundColor = originalBg;
+            }, 1500);
             
             // Add the Test and Delete buttons after saving
             // Add a test button if it doesn't exist
