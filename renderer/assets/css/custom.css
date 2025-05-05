@@ -294,6 +294,37 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.detection-button.loading {
+    background-color: #888;
+    cursor: not-allowed;
+    position: relative;
+    overflow: hidden;
+}
+
+.detection-button.loading:hover {
+    background-color: #888;
+}
+
+.detection-button.loading::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: loading-animation 1.5s infinite;
+}
+
+@keyframes loading-animation {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 /* Gesture status indicator */
 .gesture-status {
     position: fixed;

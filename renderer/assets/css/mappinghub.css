@@ -193,17 +193,21 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent overflow */
 }
 
 .gestures-container {
     flex-grow: 1;
     padding: 20px 0;
+    overflow: hidden; /* Prevent overflow */
 }
 
 .gesture-grid {
     display: flex;
     gap: 40px;
-    height: 100%;
+    height: calc(100% - 40px); /* Ensure it stays within bounds */
+    max-height: 300px; /* Set a max height to prevent overflow */
+    overflow: auto; /* Add scrolling if needed */
 }
 
 .gesture-block {
@@ -215,7 +219,9 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 40px;
+    padding: 20px; /* Reduced padding */
+    height: 200px; /* Fixed height */
+    min-height: 200px; /* Ensure minimum height */
     cursor: pointer;
     transition: background-color 0.2s;
 }

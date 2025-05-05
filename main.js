@@ -75,13 +75,16 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: true,
+    fullscreen: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // Maximize the window instead of fullscreen
+  mainWindow.maximize();
 
   // Load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));

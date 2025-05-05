@@ -103,6 +103,7 @@ function setupGesturesPage() {
     
     // Flag to track detection state
     let isDetecting = false;
+    let isLoading = false;
     
     // Hide the gesture status initially
     if (gestureStatus) {
@@ -117,26 +118,37 @@ function setupGesturesPage() {
         console.log('Received detection state:', data);
         // Update the local state
         isDetecting = data.detecting;
+        isLoading = false;
         
         // Update the button
         if (detectionToggle) {
             detectionToggle.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
             detectionToggle.classList.toggle('detecting', isDetecting);
+            detectionToggle.classList.remove('loading');
+            detectionToggle.disabled = false;
         }
     });
     
     // Detection toggle button functionality
     if (detectionToggle) {
         detectionToggle.addEventListener('click', function() {
-            // Toggle the detection state
-            isDetecting = !isDetecting;
+            if (isLoading) return; // Prevent multiple clicks while loading
+            
+            if (!isDetecting) {
+                // Going from not detecting to detecting - show loading state
+                isLoading = true;
+                this.textContent = 'Loading...';
+                this.classList.add('loading');
+                this.disabled = true;
+            } else {
+                // Going from detecting to not detecting - can happen immediately
+                isDetecting = false;
+                this.textContent = 'Start Detecting';
+                this.classList.remove('detecting');
+            }
             
             // Send toggle command to main process
-            window.api.send('toggle-detection', isDetecting);
-            
-            // Update the button state (will be fully updated when we get a response)
-            this.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
-            this.classList.toggle('detecting', isDetecting);
+            window.api.send('toggle-detection', !isDetecting);
         });
     }
     
@@ -146,11 +158,14 @@ function setupGesturesPage() {
         
         // Update the detection state
         isDetecting = data.detecting;
+        isLoading = false;
         
         // Update the button
         if (detectionToggle) {
             detectionToggle.textContent = isDetecting ? 'Stop Detecting' : 'Start Detecting';
             detectionToggle.classList.toggle('detecting', isDetecting);
+            detectionToggle.classList.remove('loading');
+            detectionToggle.disabled = false;
         }
         
         // Show status message on error
@@ -322,6 +337,16 @@ function setupMappingHub() {
     
     // Load saved macros for dropdown
     window.api.send('load-macros');
+    
+    // Add event listener to auto-fill name field when macro is selected
+    if (macroSelect && gestureName) {
+        macroSelect.addEventListener('change', function() {
+            // Only update the name if the current name field is empty
+            if (gestureName.value.trim() === '') {
+                gestureName.value = this.value;
+            }
+        });
+    }
     
     // Receive saved macros from the main process
     window.api.receive('macros-loaded', (loadedMacros) => {
