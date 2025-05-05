@@ -777,30 +777,38 @@ ipcMain.on('get-detection-state', (event) => {
 // Function to create the tray icon
 const createTray = () => {
   try {
-    // Create a simple icon programmatically
-    const icon = nativeImage.createEmpty();
-    // Use 16x16 size for tray (standard tray icon size)
-    const size = { width: 16, height: 16 };
+    // First check for the wave.png image in the renderer/assets/images folder
+    const waveIconPath = path.join(__dirname, 'renderer', 'assets', 'images', 'wave-tray.png');
     
-    // Try to use app icon if it exists
-    let iconPath = null;
+    // Set up fallback paths for different platforms
+    let fallbackIconPath = null;
     if (process.platform === 'darwin') {
       // macOS app icon
-      iconPath = path.join(__dirname, 'build', 'icon.icns');
+      fallbackIconPath = path.join(__dirname, 'build', 'icon.icns');
     } else if (process.platform === 'win32') {
       // Windows app icon
-      iconPath = path.join(__dirname, 'build', 'icon.ico');
+      fallbackIconPath = path.join(__dirname, 'build', 'icon.ico');
     } else {
       // Linux app icon
-      iconPath = path.join(__dirname, 'build', 'icon.png');
+      fallbackIconPath = path.join(__dirname, 'build', 'icon.png');
     }
     
-    // Create tray with available icon or empty icon
-    if (iconPath && fs.existsSync(iconPath)) {
-      tray = new Tray(iconPath);
-    } else {
-      // Use empty icon as fallback
-      tray = new Tray(icon);
+    // Check if wave.png exists
+    if (fs.existsSync(waveIconPath)) {
+      console.log('Using wave.png as tray icon:', waveIconPath);
+      const waveIcon = nativeImage.createFromPath(waveIconPath);
+      tray = new Tray(waveIcon.resize({ width: 16, height: 16 }));
+    } 
+    // If wave.png doesn't exist, fall back to platform-specific icons
+    else if (fallbackIconPath && fs.existsSync(fallbackIconPath)) {
+      console.log('Using fallback icon:', fallbackIconPath);
+      tray = new Tray(fallbackIconPath);
+    } 
+    // If no icons are found, create an empty icon as a last resort
+    else {
+      console.log('No icon found, using empty icon');
+      const emptyIcon = nativeImage.createEmpty();
+      tray = new Tray(emptyIcon);
     }
     
     const contextMenu = Menu.buildFromTemplate([
