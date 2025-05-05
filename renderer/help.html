@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com">
+    <title>Wave - Help Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/main.css" />
+    <link rel="stylesheet" href="./assets/css/main-menu.css" />
+    <link rel="stylesheet" href="./assets/css/custom.css" />
+    <style>
+        .help-content {
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .help-content h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .help-content h3 {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        
+        .help-section {
+            margin-bottom: 40px;
+        }
+        
+        .step {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background-color: #1a73e8;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .example {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+            margin: 20px 0;
+        }
+        
+        .tip {
+            background-color: #e8f0fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        img.help-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar expanded">
+            <div class="sidebar-header">
+                <div class="profile-icon">
+                    <img src="./assets/images/wave.png" alt="Wave Logo" />
+                </div>
+                <button class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="mappinghub.html">Mapping Hub</a></li>
+                    <li><a href="macrohub.html">Macro Hub</a></li>
+                    <li><a href="help.html">Help</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main content area -->
+        <div class="content">
+            <h1>Help Guide</h1>
+            
+            <div class="help-content">
+                <div class="help-section">
+                    <h2>Welcome to Wave</h2>
+                    <p>Wave is a powerful desktop application that allows you to control your computer using hand gestures detected through your webcam. This guide will help you understand how to set up macros, create gesture mappings, and use the application effectively.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h2>Getting Started</h2>
+                    <p>The Wave application consists of three main components:</p>
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Macro Hub</strong>: This is where you create sequences of actions (macros) that will be executed when a gesture is detected.
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Mapping Hub</strong>: Here you can link specific hand gestures to the macros you've created.
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Home</strong>: The main screen where you can enable gesture detection and see all your active mappings.
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>Pro Tip:</strong> Before starting, make sure your webcam is properly connected and has a clear view of your hands.
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h2>Step-by-Step Tutorial</h2>
+                    <h3>Creating a Macro</h3>
+                    <ol>
+                        <li>Go to the <strong>Macro Hub</strong> page using the sidebar.</li>
+                        <li>Click the <strong>New Macro</strong> button in the top right corner.</li>
+                        <li>Add a descriptive name for your macro in the "Name" field.</li>
+                        <li>Add one or more actions to your macro from the available types:
+                            <ul>
+                                <li><strong>Key Press</strong>: Simulate keyboard input (e.g., Ctrl + C for copy).</li>
+                                <li><strong>Upload Script</strong>: Run a custom script or application.</li>
+                                <li><strong>Command Line</strong>: Execute a command-line command.</li>
+                            </ul>
+                        </li>
+                        <li>Arrange your actions in the desired order using drag and drop.</li>
+                        <li>Click <strong>Save</strong> to store your macro.</li>
+                    </ol>
+                    
+                    <h3>Mapping Gestures</h3>
+                    <ol>
+                        <li>Navigate to the <strong>Mapping Hub</strong> page.</li>
+                        <li>Click <strong>New Mapping</strong> to create a new gesture mapping.</li>
+                        <li>Select the macro you want to trigger from the dropdown menu.</li>
+                        <li>Give your mapping a descriptive name.</li>
+                        <li>Click on either the left or right hand block (or both) to select a gesture.</li>
+                        <li>Choose the gesture(s) you want to use from the popup menu.</li>
+                        <li>Click <strong>Save</strong> to create the mapping.</li>
+                    </ol>
+                    
+                    <h3>Using Gesture Detection</h3>
+                    <ol>
+                        <li>Go to the <strong>Home</strong> page.</li>
+                        <li>Click the <strong>Start Detecting</strong> button to enable gesture recognition.</li>
+                        <li>Position yourself in front of your webcam.</li>
+                        <li>Perform the gestures you've mapped to trigger the associated macros.</li>
+                        <li>To stop detection, click the <strong>Stop Detecting</strong> button.</li>
+                    </ol>
+                </div>
+                
+                <div class="help-section">
+                    <h2>Practical Example: Media Controls</h2>
+                    <div class="example">
+                        <h3>Scenario: Control music playback with hand gestures</h3>
+                        <p>Let's create a set of gesture controls for your media player:</p>
+                        
+                        <h4>Step 1: Create the Play/Pause Macro</h4>
+                        <p>1. Go to <strong>Macro Hub</strong> and click <strong>New Macro</strong>.</p>
+                        <p>2. Name it "Play/Pause".</p>
+                        <p>3. Add a <strong>Key Press</strong> action and set it to "Space" (the universal play/pause shortcut).</p>
+                        <p>4. Click <strong>Save</strong>.</p>
+                        
+                        <h4>Step 2: Create Volume Up/Down Macros</h4>
+                        <p>1. Create a new macro named "Volume Up".</p>
+                        <p>2. Add a <strong>Key Press</strong> action and set it to "Ctrl + Up Arrow".</p>
+                        <p>3. Save and create another macro named "Volume Down".</p>
+                        <p>4. Add a <strong>Key Press</strong> action and set it to "Ctrl + Down Arrow".</p>
+                        
+                        <h4>Step 3: Map Gestures</h4>
+                        <p>1. Go to <strong>Mapping Hub</strong> and create a new mapping.</p>
+                        <p>2. Select the "Play/Pause" macro and name the mapping "Play/Pause".</p>
+                        <p>3. For the right hand, select the "Fist" gesture (✊).</p>
+                        <p>4. Save the mapping.</p>
+                        <p>5. Create a second mapping for "Volume Up" with the "Thumbs Up" (👍) gesture.</p>
+                        <p>6. Create a third mapping for "Volume Down" with the "Peace" (✌️) gesture.</p>
+                        
+                        <h4>Step 4: Use Your Gestures</h4>
+                        <p>1. Return to the <strong>Home</strong> page and click <strong>Start Detecting</strong>.</p>
+                        <p>2. Open your media player and start playing something.</p>
+                        <p>3. Make a fist gesture (✊) to pause/play the music.</p>
+                        <p>4. Use thumbs up (👍) to increase volume.</p>
+                        <p>5. Use peace sign (✌️) to decrease volume.</p>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h2>Tips for Better Detection</h2>
+                    <ul>
+                        <li>Ensure good lighting in your workspace for better hand detection.</li>
+                        <li>Keep your hand within the webcam's field of view.</li>
+                        <li>Make clear, deliberate gestures for more reliable detection.</li>
+                        <li>Try to avoid busy or cluttered backgrounds that might confuse the detection system.</li>
+                        <li>For two-handed gestures, make sure both hands are visible to the camera.</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h2>Troubleshooting</h2>
+                    <h3>Gesture Not Being Detected</h3>
+                    <ul>
+                        <li>Ensure your webcam is working properly.</li>
+                        <li>Check that you've clicked "Start Detecting" on the Home page.</li>
+                        <li>Position your hand clearly in front of the camera.</li>
+                        <li>Try making the gesture more deliberately or with better lighting.</li>
+                    </ul>
+                    
+                    <h3>Macro Not Executing</h3>
+                    <ul>
+                        <li>Verify that the mapping is enabled (toggle should be "ON" on the Home page).</li>
+                        <li>Test the macro directly using the "Test" button in the Macro Hub.</li>
+                        <li>Ensure the application you're trying to control is the active window.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./assets/js/renderer.js"></script>
+</body>
+
+</html> 

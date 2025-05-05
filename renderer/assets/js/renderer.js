@@ -38,9 +38,9 @@ function setupPageSpecificFunctionality() {
             if (link) {
                 const linkPath = link.getAttribute('href');
                 // Check if this is the current page
-                if ((pageName === linkPath) || 
-                    (pageName === '' && linkPath === 'index.html') || 
-                    (pageName === 'index.html' && linkPath === 'index.html')) {
+                if (linkPath === 'index.html' && (pageName === '' || pageName === 'index.html')) {
+                    item.classList.add('selected');
+                } else if (pageName === linkPath) {
                     item.classList.add('selected');
                 } else {
                     item.classList.remove('selected');
