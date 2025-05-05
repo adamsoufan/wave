@@ -450,8 +450,7 @@ const executeAction = (action) => {
       executeKeyPress(action.value);
       break;
     case 'command':
-      // Command execution code would go here
-      console.log('Command execution not implemented yet');
+      executeCommand(action.value);
       break;
     case 'script':
       // Script execution code would go here
@@ -459,6 +458,49 @@ const executeAction = (action) => {
       break;
     default:
       console.error(`Unknown action type: ${action.type}`);
+  }
+};
+
+// Function to execute a command line command
+const executeCommand = (command) => {
+  if (!command || typeof command !== 'string' || command.trim() === '') {
+    console.error('Invalid command provided');
+    return;
+  }
+  
+  console.log(`Executing command: ${command}`);
+  
+  try {
+    // Use child_process.exec for simple command execution
+    const { exec } = require('child_process');
+    
+    const process = exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Command execution error: ${error}`);
+        return;
+      }
+      
+      if (stdout) {
+        console.log(`Command stdout: ${stdout}`);
+      }
+      
+      if (stderr) {
+        console.error(`Command stderr: ${stderr}`);
+      }
+    });
+    
+    // Handle process exit
+    process.on('exit', (code) => {
+      console.log(`Command process exited with code ${code}`);
+    });
+    
+    // Log if process fails to spawn
+    process.on('error', (err) => {
+      console.error(`Failed to start command process: ${err}`);
+    });
+    
+  } catch (error) {
+    console.error(`Error executing command: ${error}`);
   }
 };
 
