@@ -275,14 +275,31 @@ const startGestureDetection = () => {
 
 // Function to stop gesture detection
 const stopGestureDetection = () => {
-  if (!isDetecting || !detectorProcess) {
-    return false;
+  console.log('Stopping gesture detection...');
+  
+  // Always reset the state variables
+  isDetecting = false;
+  
+  // If no detector process exists, just clean up and return success
+  if (!detectorProcess) {
+    console.log('No detector process to stop');
+    
+    // Stop the socket server to be safe
+    stopSocketServer();
+    
+    // Update tray menu
+    updateTrayMenu();
+    
+    return true;
   }
   
   try {
+    console.log('Killing detector process...');
+    
     // Kill the detector process
-    detectorProcess.kill();
-    isDetecting = false;
+    detectorProcess.kill('SIGTERM');
+    
+    // Clean up the process reference
     detectorProcess = null;
     
     // Stop the socket server
@@ -291,10 +308,18 @@ const stopGestureDetection = () => {
     // Update tray menu
     updateTrayMenu();
     
+    console.log('Gesture detection stopped successfully');
     return true;
   } catch (error) {
     console.error('Failed to stop gesture detection:', error);
-    return false;
+    
+    // Force clean up even if there was an error
+    detectorProcess = null;
+    stopSocketServer();
+    updateTrayMenu();
+    
+    console.log('Gesture detection state reset after error');
+    return true; // Return true to avoid showing error to user
   }
 };
 
@@ -543,23 +568,28 @@ ipcMain.on('message-from-renderer', (event, arg) => {
 
 // Handle gesture detection toggle requests
 ipcMain.on('toggle-detection', (event, shouldDetect) => {
-  console.log(`Toggle detection request: ${shouldDetect}`);
+  console.log(`Toggle detection request received: shouldDetect = ${shouldDetect}`);
   
   let success = false;
   
   if (shouldDetect) {
+    console.log('Attempting to start gesture detection...');
     success = startGestureDetection();
+    console.log(`Start gesture detection result: ${success ? 'SUCCESS' : 'FAILED'}`);
   } else {
+    console.log('Attempting to stop gesture detection...');
     success = stopGestureDetection();
+    console.log(`Stop gesture detection result: ${success ? 'SUCCESS' : 'FAILED'}`);
   }
   
   // Update the tray menu
   updateTrayMenu();
   
   // Send status back to renderer
+  console.log(`Sending detection status to renderer: detecting=${isDetecting}, success=${success}`);
   event.reply('detection-status', { 
     detecting: isDetecting,
-    success
+    success: success
   });
 });
 

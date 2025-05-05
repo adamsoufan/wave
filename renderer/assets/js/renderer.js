@@ -140,15 +140,19 @@ function setupGesturesPage() {
                 this.textContent = 'Loading...';
                 this.classList.add('loading');
                 this.disabled = true;
+                
+                // Send toggle command to main process for starting detection
+                window.api.send('toggle-detection', true);
             } else {
-                // Going from detecting to not detecting - can happen immediately
-                isDetecting = false;
-                this.textContent = 'Start Detecting';
-                this.classList.remove('detecting');
+                // Going from detecting to not detecting - show stopping state
+                isLoading = true;
+                this.textContent = 'Stopping...';
+                this.classList.add('loading');
+                this.disabled = true;
+                
+                // Send toggle command to main process for stopping detection
+                window.api.send('toggle-detection', false);
             }
-            
-            // Send toggle command to main process
-            window.api.send('toggle-detection', !isDetecting);
         });
     }
     
@@ -168,9 +172,9 @@ function setupGesturesPage() {
             detectionToggle.disabled = false;
         }
         
-        // Show status message on error
-        if (!data.success) {
-            alert('There was an error ' + (isDetecting ? 'starting' : 'stopping') + ' gesture detection.');
+        // Show status message on error, but only when starting detection fails
+        if (!data.success && data.detecting) {
+            alert('There was an error starting gesture detection.');
         }
     });
     
