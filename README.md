@@ -2,7 +2,7 @@
 
 ![Wave Gestures Logo](renderer/assets/images/wave.png)
 
-Wave Gestures is a desktop application that allows you to control your computer using hand gestures detected through your webcam. Create custom macros, map them to specific hand gestures, and execute commands without touching your keyboard or mouse.
+Wave is a desktop application that allows you to control your computer using hand gestures detected through your webcam. Create custom macros, map them to specific hand gestures, and execute commands without touching your keyboard or mouse.
 
 ## Features
 
@@ -59,21 +59,7 @@ pip install -r requirements.txt
 npm start
 ```
 
-For development mode with DevTools open:
-
-```bash
-npm run dev
-```
-
 ## Building the Application
-
-To build a distributable package:
-
-```bash
-npm run build
-```
-
-This will create installation packages in the `dist` directory.
 
 ## Usage Guide
 
@@ -104,17 +90,13 @@ This will create installation packages in the `dist` directory.
 
 ### Example: Media Controls
 
-Create macros for:
+Create macro for:
 
 - Play/Pause (Space key)
-- Volume Up (volume up key)
-- Volume Down (volume down key)
 
 Map them to:
 
 - Fist gesture for Play/Pause
-- Thumbs Up for Volume Up
-- Peace Sign for Volume Down
 
 ## Project Structure
 
@@ -155,10 +137,6 @@ Map them to:
 ## License
 
 ISC License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Acknowledgments
 
