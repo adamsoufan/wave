@@ -271,11 +271,13 @@ body {
     background-color: #1a73e8;
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 10px 16px;
+    border-radius: 6px;
+    padding: 12px 24px;
     font-weight: 600;
+    font-size: 16px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .detection-button.detecting {
@@ -284,10 +286,12 @@ body {
 
 .detection-button:hover {
     background-color: #1557b0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .detection-button.detecting:hover {
     background-color: #e62222;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Gesture status indicator */
