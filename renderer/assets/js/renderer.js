@@ -185,8 +185,22 @@ function setupGesturesPage() {
             
             const circleIcon = document.createElement('div');
             circleIcon.classList.add('circle-icon');
-            // Use the preview emoji or any available gesture
-            circleIcon.textContent = mapping.previewEmoji || mapping.rightGesture || mapping.leftGesture || '👍';
+            
+            // Check if the preview emoji is stored as JSON (for combined gestures)
+            if (mapping.previewEmoji && mapping.previewEmoji.startsWith('{') && mapping.previewGestureId === 'combined') {
+                try {
+                    // Try to parse the JSON
+                    const gestures = JSON.parse(mapping.previewEmoji);
+                    circleIcon.classList.add('combined-gesture');
+                    circleIcon.innerHTML = `<span class="left-gesture">${gestures.left}</span><span class="right-gesture">${gestures.right}</span>`;
+                } catch (e) {
+                    // Fallback if JSON parsing fails
+                    circleIcon.textContent = mapping.rightGesture || mapping.leftGesture || '';
+                }
+            } else {
+                // Use the preview emoji or any available gesture
+                circleIcon.textContent = mapping.previewEmoji || mapping.rightGesture || mapping.leftGesture || '';
+            }
             
             iconDiv.appendChild(circleIcon);
             card.appendChild(iconDiv);
@@ -212,9 +226,14 @@ function setupGesturesPage() {
             offLabel.classList.add('toggle-label');
             offLabel.textContent = 'OFF';
             
-            toggleContainer.appendChild(offLabel);
+            const toggleSlider = document.createElement('div');
+            toggleSlider.classList.add('toggle-slider');
+            
+            toggleSwitch.appendChild(onLabel);
+            toggleSwitch.appendChild(offLabel);
+            toggleSwitch.appendChild(toggleSlider);
+            
             toggleContainer.appendChild(toggleSwitch);
-            toggleContainer.appendChild(onLabel);
             card.appendChild(toggleContainer);
             
             // Add click handler for the toggle switch
@@ -355,9 +374,17 @@ function setupMappingHub() {
         // Update the preview
         const previewCircle = document.querySelector('.gesture-preview-circle');
         if (previewCircle) {
-            // Use any selected gesture for the preview, prioritize right hand
-            if (mapping.previewEmoji) {
+            // Check if both hands have gestures
+            if (mapping.leftGesture && mapping.rightGesture) {
+                // Display combined gesture
+                previewCircle.innerHTML = `<span class="left-gesture">${mapping.leftGesture}</span><span class="right-gesture">${mapping.rightGesture}</span>`;
+                previewCircle.setAttribute('data-gesture-id', 'combined');
+                previewCircle.classList.add('combined-gesture');
+            }
+            // Otherwise use any existing preview or default to right/left hand gesture
+            else if (mapping.previewEmoji) {
                 previewCircle.textContent = mapping.previewEmoji;
+                previewCircle.classList.remove('combined-gesture');
                 // Add the gesture ID if available
                 if (mapping.previewGestureId) {
                     previewCircle.setAttribute('data-gesture-id', mapping.previewGestureId);
@@ -365,19 +392,24 @@ function setupMappingHub() {
                     previewCircle.setAttribute('data-gesture-id', mapping.rightGestureId);
                 } else if (mapping.leftGestureId) {
                     previewCircle.setAttribute('data-gesture-id', mapping.leftGestureId);
+                } else {
+                    previewCircle.removeAttribute('data-gesture-id');
                 }
             } else if (mapping.rightGesture) {
                 previewCircle.textContent = mapping.rightGesture;
+                previewCircle.classList.remove('combined-gesture');
                 if (mapping.rightGestureId) {
                     previewCircle.setAttribute('data-gesture-id', mapping.rightGestureId);
                 }
             } else if (mapping.leftGesture) {
                 previewCircle.textContent = mapping.leftGesture;
+                previewCircle.classList.remove('combined-gesture');
                 if (mapping.leftGestureId) {
                     previewCircle.setAttribute('data-gesture-id', mapping.leftGestureId);
                 }
             } else {
-                previewCircle.textContent = '👍'; // Default emoji
+                previewCircle.textContent = '';
+                previewCircle.classList.remove('combined-gesture');
                 previewCircle.removeAttribute('data-gesture-id');
             }
         }
@@ -457,17 +489,58 @@ function setupMappingHub() {
                         }
                     }
                     
-                    // Update the preview
-                    const previewCircle = document.querySelector('.gesture-preview-circle');
-                    if (previewCircle) {
-                        previewCircle.textContent = emoji;
-                        previewCircle.setAttribute('data-gesture-id', gestureId);
-                    }
+                    // Update the preview based on both left and right hand gestures
+                    updatePreviewCircle();
                     
                     // Close the popup
                     gestureSelectionPopup.style.display = 'none';
                 });
             });
+        }
+    }
+    
+    // Function to update the preview circle based on selected gestures
+    function updatePreviewCircle() {
+        const previewCircle = document.querySelector('.gesture-preview-circle');
+        if (!previewCircle) return;
+        
+        const leftBlock = document.querySelector('.gesture-block.left-hand');
+        const rightBlock = document.querySelector('.gesture-block.right-hand');
+        
+        if (!leftBlock || !rightBlock) return;
+        
+        const leftPlusIcon = leftBlock.querySelector('.gesture-plus-icon');
+        const rightPlusIcon = rightBlock.querySelector('.gesture-plus-icon');
+        
+        if (!leftPlusIcon || !rightPlusIcon) return;
+        
+        const leftGesture = leftPlusIcon.classList.contains('selected-gesture') ? leftPlusIcon.textContent : null;
+        const rightGesture = rightPlusIcon.classList.contains('selected-gesture') ? rightPlusIcon.textContent : null;
+        
+        const leftGestureId = leftPlusIcon.getAttribute('data-gesture-id');
+        const rightGestureId = rightPlusIcon.getAttribute('data-gesture-id');
+        
+        // Update the preview based on which gestures are selected
+        if (leftGesture && rightGesture) {
+            // Both hands have gestures - display them in top-left and bottom-right
+            previewCircle.innerHTML = `<span class="left-gesture">${leftGesture}</span><span class="right-gesture">${rightGesture}</span>`;
+            previewCircle.setAttribute('data-gesture-id', 'combined');
+            previewCircle.classList.add('combined-gesture');
+        } else if (rightGesture) {
+            // Only right hand has a gesture
+            previewCircle.textContent = rightGesture;
+            previewCircle.setAttribute('data-gesture-id', rightGestureId);
+            previewCircle.classList.remove('combined-gesture');
+        } else if (leftGesture) {
+            // Only left hand has a gesture
+            previewCircle.textContent = leftGesture;
+            previewCircle.setAttribute('data-gesture-id', leftGestureId);
+            previewCircle.classList.remove('combined-gesture');
+        } else {
+            // No gestures selected
+            previewCircle.textContent = '';
+            previewCircle.removeAttribute('data-gesture-id');
+            previewCircle.classList.remove('combined-gesture');
         }
     }
     
@@ -491,7 +564,9 @@ function setupMappingHub() {
             // Reset preview
             const previewCircle = document.querySelector('.gesture-preview-circle');
             if (previewCircle) {
-                previewCircle.textContent = '👍';
+                previewCircle.textContent = '';
+                previewCircle.removeAttribute('data-gesture-id');
+                previewCircle.classList.remove('combined-gesture');
             }
             
             // Reset macro selection
@@ -560,8 +635,22 @@ function setupMappingHub() {
             
             // Get preview emoji for display
             const previewCircle = document.querySelector('.gesture-preview-circle');
-            const previewEmoji = previewCircle.textContent;
-            const previewGestureId = previewCircle.getAttribute('data-gesture-id');
+            let previewEmoji = '';
+            let previewGestureId = '';
+            
+            // If both gestures are selected, we'll store info to rebuild the combined view
+            if (leftGesture && rightGesture) {
+                // Store a JSON string with both gestures to reconstruct later
+                previewEmoji = JSON.stringify({
+                    left: leftGesture,
+                    right: rightGesture
+                });
+                previewGestureId = 'combined';
+            } else {
+                // Otherwise just use the current preview
+                previewEmoji = previewCircle.textContent;
+                previewGestureId = previewCircle.getAttribute('data-gesture-id') || '';
+            }
             
             // Send mapping data to main process
             window.api.send('save-gesture-mapping', {

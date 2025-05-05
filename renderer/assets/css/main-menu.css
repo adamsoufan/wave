@@ -151,6 +151,23 @@
     justify-content: center;
     align-items: center;
     font-size: 70px;
+    position: relative;
+}
+
+.circle-icon.combined-gesture {
+    font-size: 50px;
+}
+
+.circle-icon.combined-gesture .left-gesture {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+.circle-icon.combined-gesture .right-gesture {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
 }
 
 .gesture-name {
