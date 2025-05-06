@@ -32,10 +32,10 @@ When running, Wave Gestures can detect the following gestures:
 - Windows 10 or later
 - Python 3.8+ installed
 - Node.js and npm installed
-- Visual Studio Build Tools with C++ development workload installed
+- C++ Build Tools for Windows (not the full Visual Studio IDE)
   - Required for compiling native modules like RobotJS
-  - Can be installed from [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/) (Choose "Build Tools for Visual Studio")
-  - Select "Desktop development with C++" during installation
+  - Download the "Build Tools for Visual Studio" from the [Visual Studio Downloads page](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  - During installation, select only the "Desktop development with C++" workload
 - Webcam connected to your computer
 
 ### Step 1: Clone the Repository
