@@ -1,4 +1,6 @@
-# Wave
+<p align="center">
+  <img src="renderer/assets/images/wave.png" alt="Wave Logo" width="200">
+</p>
 
 ![Wave Logo](renderer/assets/images/wave.png)
 
