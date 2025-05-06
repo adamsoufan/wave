@@ -6,7 +6,7 @@ Wave is a desktop application that allows you to control your computer using han
 
 ## Features
 
-- **Real-time Hand Gesture Detection**: Detects common hand gestures like open hand, fist, thumbs up, and peace sign
+- **Real-time Hand Gesture Detection**: Detects gestures like open hand, pinched fingers, OK sign, peace sign, point up, point down, thumbs up, and thumbs down
 - **Custom Macro Creation**: Create sequences of actions that can be triggered by gestures
 - **Multiple Action Types**:
   - Keyboard shortcuts
@@ -20,17 +20,20 @@ Wave is a desktop application that allows you to control your computer using han
 When running, Wave Gestures can detect the following gestures:
 
 - ✋ Open Hand
-- ✊ Fist
-- 👍 Thumbs Up
-- ✌️ Peace Sign
+- 🤌 Pinched Fingers
 - 👌 OK Sign
+- ✌️ Peace Sign
+- 👆 Point Up
+- 👇 Point Down
+- 👍 Thumbs Up
+- 👎 Thumbs Down
 
 ## Installation
 
 ### Prerequisites
 
 - Windows 10 or later
-- Node.js 20+ installed
+- Node.js 20+ installed (20 is recommended)
 - Python 3.8+ installed
 - C++ Build Tools for Windows (not the full Visual Studio IDE)
   - Required for compiling native modules like RobotJS
@@ -102,7 +105,7 @@ Create macro for:
 
 Map them to:
 
-- Fist gesture for Play/Pause
+- Thumbs Up gesture for Play/Pause
 
 ## Project Structure
 

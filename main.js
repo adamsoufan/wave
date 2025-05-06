@@ -26,19 +26,25 @@ const SOCKET_PORT = 5050;
 // Define gesture IDs for internal use
 const gestureData = {
   'open_hand': { id: 'open_hand', emoji: '✋', name: 'Open Hand' },
-  'fist': { id: 'fist', emoji: '✊', name: 'Fist' },
-  'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' }
+  'pinched_fingers': { id: 'pinched_fingers', emoji: '🤌', name: 'Pinched Fingers' },
+  'ok': { id: 'ok', emoji: '👌', name: 'OK' },
+  'peace': { id: 'peace', emoji: '✌️', name: 'Peace' },
+  'point_up': { id: 'point_up', emoji: '👆', name: 'Point Up' },
+  'point_down': { id: 'point_down', emoji: '👇', name: 'Point Down' },
+  'thumbs_up': { id: 'thumbs_up', emoji: '👍', name: 'Thumbs Up' },
+  'thumbs_down': { id: 'thumbs_down', emoji: '👎', name: 'Thumbs Down' }
 };
 
 // Map emoji representations back to gesture IDs (for UI → internal conversion)
 const emojiToGestureIdMap = {
   '✋': 'open_hand',
-  '✊': 'fist', 
-  '👍': 'thumbs_up',
-  // Provide mappings for other emojis in the UI
-  '👋': 'wave',
+  '🤌': 'pinched_fingers',
+  '👌': 'ok',
   '✌️': 'peace',
-  '👌': 'ok'
+  '👆': 'point_up',
+  '👇': 'point_down',
+  '👍': 'thumbs_up',
+  '👎': 'thumbs_down'
 };
 
 // Paths for storing macros and mappings data
