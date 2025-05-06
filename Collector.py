@@ -18,8 +18,14 @@ mp_draw = mp.solutions.drawing_utils
 # gesture labels /////////////////////////////////////////////////
 gesture_labels = {
     0: 'open_hand',
-    1: 'fist',
-    2: 'thumbs_up'
+    1: 'pinched_fingers',
+    2: 'ok',
+    3: 'peace',
+    4: 'point_up',
+    5: 'point_down',
+    6: 'thumbs_up',
+    7: 'thumbs_down'
+
 }
 
 # Setup ///////////////////////////////////////////////////////////////////////////
