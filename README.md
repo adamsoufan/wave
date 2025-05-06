@@ -1,5 +1,3 @@
-# Wave Gestures
-
 ![Wave Gestures Logo](renderer/assets/images/wave.png)
 
 Wave is a desktop application that allows you to control your computer using hand gestures detected through your webcam. Create custom macros, map them to specific hand gestures, and execute commands without touching your keyboard or mouse.
