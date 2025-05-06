@@ -30,13 +30,15 @@ When running, Wave Gestures can detect the following gestures:
 ### Prerequisites
 
 - Windows 10 or later
+- Node.js 20+ installed
 - Python 3.8+ installed
-- Node.js and npm installed
 - C++ Build Tools for Windows (not the full Visual Studio IDE)
   - Required for compiling native modules like RobotJS
   - Download the "Build Tools for Visual Studio" from the [Visual Studio Downloads page](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
   - During installation, select only the "Desktop development with C++" workload
 - Webcam connected to your computer
+
+**Important Note About RobotJS**: RobotJS has known compatibility issues with newer versions of Node.js and Electron. If you encounter problems when building, you may need to use electron-rebuild or follow specific instructions for rebuilding RobotJS for your Node.js/Electron version. See [RobotJS Electron Wiki](https://github.com/octalmage/robotjs/wiki/Electron) for more details.
 
 ### Step 1: Clone the Repository
 
