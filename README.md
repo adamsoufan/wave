@@ -1,6 +1,6 @@
-# Wave Gestures
+# Wave
 
-![Wave Gestures Logo](renderer/assets/images/wave.png)
+![Wave Logo](renderer/assets/images/wave.png)
 
 Wave is a desktop application that allows you to control your computer using hand gestures detected through your webcam. Create custom macros, map them to specific hand gestures, and execute commands without touching your keyboard or mouse.
 
@@ -17,7 +17,7 @@ Wave is a desktop application that allows you to control your computer using han
 
 ## Demo
 
-When running, Wave Gestures can detect the following gestures:
+When running, Wave can detect the following gestures:
 
 - ✋ Open Hand
 - 🤌 Pinched Fingers
@@ -33,7 +33,11 @@ When running, Wave Gestures can detect the following gestures:
 ### Prerequisites
 
 - Windows 10 or later
-- Node.js 20+ installed (20 is recommended)
+- **Node.js Version**: Use Node.js 18.19.x (LTS) for guaranteed compatibility
+  - This specific version ensures all dependencies work correctly
+  - **NOT RECOMMENDED**: Node.js 16.x requires downgrading Electron
+  - **NOT RECOMMENDED**: Node.js 20.x has limited RobotJS compatibility
+  - **NOT COMPATIBLE**: Node.js 22.x will not work with RobotJS
 - Python 3.8+ installed
 - C++ Build Tools for Windows (not the full Visual Studio IDE)
   - Required for compiling native modules like RobotJS
@@ -41,7 +45,15 @@ When running, Wave Gestures can detect the following gestures:
   - During installation, select only the "Desktop development with C++" workload
 - Webcam connected to your computer
 
-**Important Note About RobotJS**: RobotJS has known compatibility issues with newer versions of Node.js and Electron. If you encounter problems when building, you may need to use electron-rebuild or follow specific instructions for rebuilding RobotJS for your Node.js/Electron version. See [RobotJS Electron Wiki](https://github.com/octalmage/robotjs/wiki/Electron) for more details.
+**Important Note About Compatibility**: This application uses a combination of technologies with specific version requirements:
+
+- **RobotJS**: Critical for system automation, requires specific Node.js versions
+- **Electron**: The current version works best with Node.js 18.x+
+- For the smoothest experience, use these exact versions:
+  ```
+  Node.js: 18.19.x (LTS)
+  npm: 9.x or 10.x
+  ```
 
 ### Step 1: Clone the Repository
 
@@ -142,6 +154,23 @@ Map them to:
 - Verify the macro is correctly defined
 - Check if the mapping is enabled (toggle is ON)
 - Ensure the target application is in focus when needed
+
+### Node.js and RobotJS Compatibility Issues
+
+- For guaranteed compatibility, use exactly Node.js 18.19.x with the existing dependencies
+- If you encounter `Error: The module was compiled against a different Node.js version`:
+  - Verify you're using Node.js 18.19.x: `node --version`
+  - Run `npm rebuild` to rebuild native modules for your Node.js version
+  - For stubborn errors: `npm install --save-dev electron-rebuild` and `npx electron-rebuild`
+- If you must use Node.js 16.x:
+  - First install Node.js 16.x
+  - Run `npm uninstall electron electron-builder @electron/rebuild`
+  - Then install compatible versions: `npm install --save-dev electron@22.3.27 electron-builder@24.6.4 @electron/rebuild@3.2.10`
+  - Finally rebuild: `npm rebuild`
+- If keyboard or mouse actions aren't working:
+  - Verify RobotJS is properly installed: `npm list robotjs`
+  - Try simple RobotJS tests to confirm functionality
+  - Consider alternatives like `@nut-tree/nut-js` if RobotJS issues persist
 
 ## License
 
