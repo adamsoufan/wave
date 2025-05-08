@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -51,6 +51,10 @@ const emojiToGestureIdMap = {
 const userDataPath = app.getPath('userData');
 const macrosPath = path.join(userDataPath, 'macros.json');
 const mappingsPath = path.join(userDataPath, 'mappings.json');
+
+// Global variable to track the last notification time and active notification
+let lastNotificationTime = 0;
+let activeNotification = null;
 
 // Helper function to load data from file
 const loadDataFromFile = (filePath, defaultValue) => {
@@ -383,15 +387,39 @@ const handleDetectedGesture = (gesture) => {
   if (matchingMappings.length > 0) {
     console.log(`Found ${matchingMappings.length} matching mapping(s):`, matchingMappings.map(m => m.name).join(', '));
     
-    // Show a notification for the first matching mapping
+    // Show a notification for the first matching mapping, but only if enough time has passed
     if (!mainWindow || !mainWindow.isFocused()) {
-      // Only show notification if the window is not focused or doesn't exist
+      const currentTime = Date.now();
       const mapping = matchingMappings[0];
-      new Notification({
-        title: 'Gesture Detected',
-        body: `Detected "${gestureInfo.name}" ${gestureEmoji} - Macro: ${mapping.name}`,
-        silent: true // Don't play a sound to avoid annoyance with frequent detections
-      }).show();
+      
+      // Only show a new notification if:
+      // 1. At least 3 seconds have passed since the last notification, or
+      // 2. We have a different gesture/macro combination
+      if (currentTime - lastNotificationTime > 3000 || !activeNotification) {
+        // Close any existing notification
+        if (activeNotification) {
+          activeNotification.close();
+        }
+        
+        // Create a new notification with a short timeout
+        activeNotification = new Notification({
+          title: 'Gesture Detected',
+          body: `Detected "${gestureInfo.name}" ${gestureEmoji} - Macro: ${mapping.name}`,
+          silent: true, // Don't play a sound to avoid annoyance with frequent detections
+          timeoutType: 'never' // We'll manually close it
+        });
+        
+        activeNotification.show();
+        lastNotificationTime = currentTime;
+        
+        // Close the notification after 2 seconds
+        setTimeout(() => {
+          if (activeNotification) {
+            activeNotification.close();
+            activeNotification = null;
+          }
+        }, 2000);
+      }
     }
     
     // Execute the macro for the first matching mapping
@@ -550,6 +578,11 @@ const executeKeyPress = (keyCombo) => {
       else if (lowerKey === 'tab') key = 'tab';
       else if (lowerKey === 'enter') key = 'enter';
       else if (lowerKey === 'backspace') key = 'backspace';
+      // Handle function keys (F1-F12)
+      else if (lowerKey.startsWith('f') && !isNaN(parseInt(lowerKey.substring(1))) && 
+              parseInt(lowerKey.substring(1)) >= 1 && parseInt(lowerKey.substring(1)) <= 12) {
+        key = lowerKey;
+      }
       else key = lowerKey; // For regular keys, use lowercase
     }
   });
@@ -557,8 +590,9 @@ const executeKeyPress = (keyCombo) => {
   // Execute the key combination using robotjs
   try {
     if (key) {
+      console.log(`Attempting to press: ${key} with modifiers: ${modifiers.join(', ')}`);
       robot.keyTap(key, modifiers);
-      console.log(`Pressed: ${key} with modifiers: ${modifiers.join(', ')}`);
+      console.log(`Successfully pressed: ${key} with modifiers: ${modifiers.join(', ')}`);
     } else {
       console.error('No main key found in combination');
     }
@@ -605,6 +639,9 @@ app.on('will-quit', () => {
   if (isDetecting && detectorProcess) {
     stopGestureDetection();
   }
+  
+  // Unregister all shortcuts
+  globalShortcut.unregisterAll();
 });
 
 // IPC Communication between main and renderer processes
@@ -820,6 +857,74 @@ ipcMain.on('delete-mapping', (event, mappingName) => {
 // Handle requests for the current detection state
 ipcMain.on('get-detection-state', (event) => {
   event.reply('detection-state', { detecting: isDetecting });
+});
+
+// Handle requests to block system shortcuts
+ipcMain.on('block-system-shortcuts', (event, shouldBlock) => {
+  try {
+    // First unregister any existing shortcuts to avoid duplicates
+    globalShortcut.unregisterAll();
+    
+    if (shouldBlock) {
+      console.log('Blocking system shortcuts');
+      
+      // Register various combinations to prevent them from reaching the OS
+      // Windows key
+      globalShortcut.register('Super', () => { 
+        console.log('Windows key blocked');
+        return false;
+      });
+      
+      // Alt+F4
+      globalShortcut.register('Alt+F4', () => {
+        console.log('Alt+F4 blocked');
+        return false;
+      });
+      
+      // Win+D (Show desktop)
+      globalShortcut.register('Super+D', () => {
+        console.log('Win+D blocked');
+        return false;
+      });
+      
+      // Win+E (File Explorer)
+      globalShortcut.register('Super+E', () => {
+        console.log('Win+E blocked');
+        return false;
+      });
+      
+      // Other common system shortcuts
+      globalShortcut.register('Super+R', () => { return false; }); // Run dialog
+      globalShortcut.register('Super+L', () => { return false; }); // Lock screen
+      globalShortcut.register('Super+Tab', () => { return false; }); // Task view
+      
+      event.reply('system-shortcuts-status', { 
+        blocking: true,
+        success: true
+      });
+    } else {
+      console.log('Unblocking system shortcuts');
+      globalShortcut.unregisterAll();
+      
+      event.reply('system-shortcuts-status', { 
+        blocking: false,
+        success: true
+      });
+    }
+  } catch (error) {
+    console.error('Error managing system shortcuts:', error);
+    event.reply('system-shortcuts-status', { 
+      blocking: false,
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Unregister all shortcuts when app loses focus
+app.on('browser-window-blur', () => {
+  console.log('App lost focus, unblocking system shortcuts');
+  globalShortcut.unregisterAll();
 });
 
 // Function to create the tray icon

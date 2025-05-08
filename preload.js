@@ -17,7 +17,8 @@ contextBridge.exposeInMainWorld('api', {
       'delete-mapping',
       'toggle-detection',
       'get-detection-state',
-      'execute-macro'
+      'execute-macro',
+      'block-system-shortcuts'
     ];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
@@ -33,7 +34,8 @@ contextBridge.exposeInMainWorld('api', {
       'gesture-detected',
       'detection-status',
       'detection-state',
-      'macro-executed'
+      'macro-executed',
+      'system-shortcuts-status'
     ];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender` 

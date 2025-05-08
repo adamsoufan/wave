@@ -1412,24 +1412,21 @@ function setupKeyPressHandlerForInput(input) {
     let pressedKeys = new Set();
     let keyCombination = '';
     
-    input.addEventListener('focus', function() {
-        this.value = '';
-        this.placeholder = 'Press key combination...';
-        pressedKeys.clear();
-        keyCombination = '';
-    });
-    
-    input.addEventListener('blur', function() {
-        if (!this.value) {
-            this.placeholder = 'Click to capture key combination';
-        }
-    });
-    
-    input.addEventListener('keydown', function(e) {
+    // Create a global event listener for keydown when input is focused
+    const handleGlobalKeyDown = function(e) {
+        // Prevent default behavior
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         
         // Get the key name in a consistent format
         let keyName = e.key;
+        
+        // Skip "Unidentified" keys (often triggered by Fn key)
+        if (keyName === 'Unidentified') {
+            console.log('Skipping Unidentified key (likely Fn key)');
+            return false;
+        }
         
         // For special keys, use a more readable format
         if (keyName === ' ') keyName = 'Space';
@@ -1439,6 +1436,12 @@ function setupKeyPressHandlerForInput(input) {
         if (keyName === 'ArrowDown') keyName = '↓';
         if (keyName === 'ArrowLeft') keyName = '←';
         if (keyName === 'ArrowRight') keyName = '→';
+        if (keyName === 'Meta' || keyName === 'OS') keyName = 'Win';
+        
+        // Check the key code for function keys like F4
+        if (e.code && e.code.startsWith('F') && !isNaN(parseInt(e.code.slice(1)))) {
+            keyName = e.code; // Use the key code for function keys instead of key name
+        }
         
         // Format the key to be more readable
         keyName = keyName.charAt(0).toUpperCase() + keyName.slice(1).toLowerCase();
@@ -1447,10 +1450,19 @@ function setupKeyPressHandlerForInput(input) {
         if (e.ctrlKey && !pressedKeys.has('Ctrl')) pressedKeys.add('Ctrl');
         if (e.shiftKey && !pressedKeys.has('Shift')) pressedKeys.add('Shift');
         if (e.altKey && !pressedKeys.has('Alt')) pressedKeys.add('Alt');
-        if (e.metaKey && !pressedKeys.has('Meta')) pressedKeys.add('Meta');
+        if ((e.metaKey || e.key === 'Meta' || e.key === 'OS') && !pressedKeys.has('Win')) pressedKeys.add('Win');
         
-        // Add the current key if it's not a modifier
-        if (!['Ctrl', 'Shift', 'Alt', 'Meta'].includes(keyName)) {
+        // Add the current key if it's not a modifier or Unidentified
+        if (!['Ctrl', 'Shift', 'Alt', 'Win', 'Meta', 'OS', 'Unidentified'].includes(keyName)) {
+            // Remove any existing function keys if we're adding a new one
+            if (keyName.startsWith('F') && !isNaN(parseInt(keyName.slice(1)))) {
+                // Remove any existing function keys from the set
+                pressedKeys.forEach(key => {
+                    if (key.startsWith('F') && !isNaN(parseInt(key.slice(1)))) {
+                        pressedKeys.delete(key);
+                    }
+                });
+            }
             pressedKeys.add(keyName);
         }
         
@@ -1458,16 +1470,25 @@ function setupKeyPressHandlerForInput(input) {
         const keysArray = Array.from(pressedKeys);
         keyCombination = keysArray.join(' + ');
         
-        this.value = keyCombination;
-    });
+        input.value = keyCombination;
+        
+        return false;
+    };
     
-    // Add keyup to handle multi-key combinations better
-    input.addEventListener('keyup', function(e) {
-        // Do not clear the input on keyup, just update the pressed keys set
-        // This allows for multi-key combinations
+    // Create a global event listener for keyup when input is focused
+    const handleGlobalKeyUp = function(e) {
+        // Prevent default behavior
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         
         // Get the key name in a consistent format
         let keyName = e.key;
+        
+        // Skip "Unidentified" keys (often triggered by Fn key)
+        if (keyName === 'Unidentified') {
+            return false;
+        }
         
         // For special keys, use a more readable format
         if (keyName === ' ') keyName = 'Space';
@@ -1477,10 +1498,57 @@ function setupKeyPressHandlerForInput(input) {
         if (keyName === 'ArrowDown') keyName = '↓';
         if (keyName === 'ArrowLeft') keyName = '←';
         if (keyName === 'ArrowRight') keyName = '→';
-        
-        keyName = keyName.charAt(0).toUpperCase() + keyName.slice(1).toLowerCase();
+        if (keyName === 'Meta' || keyName === 'OS') keyName = 'Win';
         
         // Let the value persist when keys are released
         // This ensures the combination stays visible
+        
+        return false;
+    };
+    
+    input.addEventListener('focus', function() {
+        this.value = '';
+        this.placeholder = 'Press key combination...';
+        pressedKeys.clear();
+        keyCombination = '';
+        
+        // Tell the main process to block system shortcuts
+        window.api.send('block-system-shortcuts', true);
+        
+        // Add global event listeners when input is focused
+        document.addEventListener('keydown', handleGlobalKeyDown, true);
+        document.addEventListener('keyup', handleGlobalKeyUp, true);
+    });
+    
+    input.addEventListener('blur', function() {
+        if (!this.value) {
+            this.placeholder = 'Click to capture key combination';
+        }
+        
+        // Tell the main process to unblock system shortcuts
+        window.api.send('block-system-shortcuts', false);
+        
+        // Remove global event listeners when input loses focus
+        document.removeEventListener('keydown', handleGlobalKeyDown, true);
+        document.removeEventListener('keyup', handleGlobalKeyUp, true);
+    });
+    
+    // These event listeners are redundant now but kept for backup
+    input.addEventListener('keydown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    });
+    
+    input.addEventListener('keyup', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    });
+    
+    // Listen for the response from the main process about shortcut blocking
+    window.api.receive('system-shortcuts-status', (data) => {
+        console.log('System shortcuts status:', data);
+        // We could show some UI indication that shortcuts are blocked if needed
     });
 } 
