@@ -70,8 +70,13 @@ mp_drawing = mp.solutions.drawing_utils
 # Gesture Labels
 gesture_labels = {
     0: 'open_hand',
-    1: 'fist',
-    2: 'thumbs_up'
+    1: 'pinched_fingers',
+    2: 'ok',
+    3: 'peace',
+    4: 'point_up',
+    5: 'point_down',
+    6: 'thumbs_up',
+    7: 'thumbs_down'
 }
 
 #threshold for "unknown" gesture detection
@@ -134,7 +139,7 @@ while cap.isOpened():
                 # gesture is a recognized gesture, call its respective macro
                 if gesture_name in gesture_macros:
                     print(f"[MACRO] Triggering: {gesture_name}")
-                    gesture_macros[gesture_name]()
+                    #gesture_macros[gesture_name]()
                     
 
 
